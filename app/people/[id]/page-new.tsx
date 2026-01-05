@@ -1,0 +1,327 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
+
+interface Person {
+  id: string;
+  name: string;
+  birthday: string;
+  phone?: string;
+  profile_photo?: string;
+  bio?: string;
+}
+
+export default function PersonPage() {
+  const router = useRouter();
+  const params = useParams();
+  const personId = params.id as string;
+  
+  const [person, setPerson] = useState<Person | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedPerson, setEditedPerson] = useState<Person | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (personId) {
+      fetchPerson();
+    }
+  }, [personId]);
+
+  const fetchPerson = async () => {
+    const { data, error } = await supabase
+      .from('people')
+      .select('*')
+      .eq('id', personId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching person:', error);
+    } else {
+      setPerson(data);
+      setEditedPerson(data);
+    }
+    setLoading(false);
+  };
+
+  const handleSave = async () => {
+    if (!editedPerson) return;
+
+    const { error } = await supabase
+      .from('people')
+      .update({
+        name: editedPerson.name,
+        birthday: editedPerson.birthday,
+        phone: editedPerson.phone,
+        bio: editedPerson.bio,
+      })
+      .eq('id', personId);
+
+    if (error) {
+      console.error('Error updating person:', error);
+      alert('Σφάλμα κατά την αποθήκευση');
+    } else {
+      setPerson(editedPerson);
+      setIsEditing(false);
+      router.refresh();
+    }
+  };
+
+  const handleUploadPhoto = () => {
+    // @ts-ignore
+    if (typeof window.cloudinary === 'undefined') {
+      alert('Cloudinary widget δεν είναι διαθέσιμο.');
+      return;
+    }
+
+    // @ts-ignore
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+        uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+        sources: ['local', 'camera'],
+        multiple: false,
+        folder: 'memory-book/people',
+        tags: [`person_${personId}`],
+      },
+      async (error: any, result: any) => {
+        if (error) {
+          console.error('Upload error:', error);
+          alert('Σφάλμα κατά το ανέβασμα της φωτογραφίας');
+          return;
+        }
+
+        if (result.event === 'success') {
+          const photoUrl = result.info.secure_url;
+
+          const { error: profileError } = await supabase
+            .from('people')
+            .update({ profile_photo: photoUrl })
+            .eq('id', personId);
+          
+          if (profileError) {
+            console.error('Error saving photo:', profileError);
+            alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας');
+          } else {
+            setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
+            setEditedPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
+            router.refresh();
+          }
+        }
+      }
+    );
+
+    widget.open();
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('el-GR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse text-warm-600">Φόρτωση...</div>
+      </div>
+    );
+  }
+
+  if (!person) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-warm-600 text-lg mb-4">Το άτομο δεν βρέθηκε</p>
+        <Link
+          href="/people"
+          className="text-peach-600 hover:underline"
+        >
+          Επιστροφή στη λίστα
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center gap-4">
+        <Link
+          href="/people"
+          className="p-2 hover:bg-warm-100 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-6 h-6 text-warm-600" />
+        </Link>
+        <h1 className="text-3xl md:text-4xl font-bold text-warm-800">
+          {person.name}
+        </h1>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Column - Profile Photo */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-md">
+            <div className="aspect-square bg-gradient-to-br from-peach-100 to-warm-100 relative group">
+              {person.profile_photo ? (
+                <img
+                  src={person.profile_photo}
+                  alt={person.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-8xl font-bold text-peach-500">
+                    {person.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+              {isEditing && (
+                <button
+                  onClick={handleUploadPhoto}
+                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <div className="text-center text-white">
+                    <Upload className="w-12 h-12 mx-auto mb-2" />
+                    <p className="font-semibold">Αλλαγή Φωτογραφίας</p>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Info */}
+        <div className="bg-white rounded-2xl p-6 shadow-md">
+          {!isEditing ? (
+            <div className="space-y-6">
+              <div className="flex items-start gap-3">
+                <Cake className="w-5 h-5 text-peach-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-warm-600 mb-1">Γενέθλια</p>
+                  <p className="font-semibold text-warm-800">
+                    {formatDate(person.birthday)}
+                  </p>
+                </div>
+              </div>
+
+              {person.phone && (
+                <div className="flex items-start gap-3">
+                  <Phone className="w-5 h-5 text-peach-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-warm-600 mb-1">Τηλέφωνο</p>
+                    <a
+                      href={`tel:${person.phone}`}
+                      className="font-semibold text-warm-800 hover:text-peach-600"
+                    >
+                      {person.phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {person.bio && (
+                <div>
+                  <p className="text-sm text-warm-600 mb-2">Βιογραφικό</p>
+                  <p className="text-warm-800 whitespace-pre-wrap">
+                    {person.bio}
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={() => setIsEditing(true)}
+                className="w-full flex items-center justify-center gap-2 bg-warm-100 hover:bg-warm-200 text-warm-800 font-semibold py-3 rounded-lg transition-colors mt-8"
+              >
+                <Edit2 className="w-4 h-4" />
+                Επεξεργασία
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-warm-600 mb-2">
+                  Όνομα
+                </label>
+                <input
+                  type="text"
+                  value={editedPerson?.name || ''}
+                  onChange={(e) =>
+                    setEditedPerson(prev => prev ? { ...prev, name: e.target.value } : null)
+                  }
+                  className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-warm-600 mb-2">
+                  Γενέθλια
+                </label>
+                <input
+                  type="date"
+                  value={editedPerson?.birthday || ''}
+                  onChange={(e) =>
+                    setEditedPerson(prev => prev ? { ...prev, birthday: e.target.value } : null)
+                  }
+                  className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-warm-600 mb-2">
+                  Τηλέφωνο
+                </label>
+                <input
+                  type="tel"
+                  value={editedPerson?.phone || ''}
+                  onChange={(e) =>
+                    setEditedPerson(prev => prev ? { ...prev, phone: e.target.value } : null)
+                  }
+                  className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-warm-600 mb-2">
+                  Βιογραφικό
+                </label>
+                <textarea
+                  value={editedPerson?.bio || ''}
+                  onChange={(e) =>
+                    setEditedPerson(prev => prev ? { ...prev, bio: e.target.value } : null)
+                  }
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex gap-2 mt-6">
+                <button
+                  onClick={handleSave}
+                  className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-lg transition-all shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  Αποθήκευση
+                </button>
+                <button
+                  onClick={() => {
+                    setEditedPerson(person);
+                    setIsEditing(false);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Ακύρωση
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

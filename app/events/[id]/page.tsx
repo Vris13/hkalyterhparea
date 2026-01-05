@@ -31,7 +31,8 @@ interface Person {
 interface RSVP {
   id: string;
   event_id: string;
-  person_id: string;
+  person_id: string | null;
+  custom_name?: string;
   response: 'Ναι' | 'Όχι' | 'Μπορεί' | 'Θα αργήσω';
   person?: Person;
 }
@@ -46,6 +47,7 @@ export default function EventDetailPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [rsvps, setRSVPs] = useState<RSVP[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
+  const [customName, setCustomName] = useState<string>('');
   const [selectedResponse, setSelectedResponse] = useState<'Ναι' | 'Όχι' | 'Μπορεί' | 'Θα αργήσω'>('Ναι');
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -125,11 +127,11 @@ export default function EventDetailPage() {
     if (error) {
       console.error('Error fetching RSVPs:', error);
     } else {
-      // Transform the data to match our interface
       const transformedData = (data || []).map(item => ({
         id: item.id,
         event_id: item.event_id,
         person_id: item.person_id,
+        custom_name: item.custom_name,
         response: item.response,
         person: Array.isArray(item.people) ? item.people[0] : item.people
       }));
@@ -138,16 +140,51 @@ export default function EventDetailPage() {
   };
 
   const handleAddRSVP = async () => {
-    if (!selectedPersonId) {
-      alert('Επέλεξε ένα άτομο');
+    if (!selectedPersonId && !customName.trim()) {
+      alert('Επέλεξε ένα άτομο ή γράψε ένα όνομα');
       return;
     }
 
-    // Check if RSVP already exists
+    if (customName.trim()) {
+      const existingCustomRSVP = rsvps.find(r => r.custom_name?.toLowerCase() === customName.trim().toLowerCase());
+      
+      if (existingCustomRSVP) {
+        const { error } = await supabase
+          .from('event_rsvps')
+          .update({ response: selectedResponse })
+          .eq('id', existingCustomRSVP.id);
+
+        if (error) {
+          console.error('Error updating RSVP:', error);
+          alert('Σφάλμα κατά την ενημέρωση');
+        } else {
+          fetchRSVPs();
+          setCustomName('');
+        }
+        return;
+      }
+
+      const { error } = await supabase
+        .from('event_rsvps')
+        .insert({
+          event_id: eventId,
+          custom_name: customName.trim(),
+          response: selectedResponse,
+        });
+
+      if (error) {
+        console.error('Error adding RSVP:', error);
+        alert('Σφάλμα κατά την προσθήκη');
+      } else {
+        fetchRSVPs();
+        setCustomName('');
+      }
+      return;
+    }
+
     const existingRSVP = rsvps.find(r => r.person_id === selectedPersonId);
 
     if (existingRSVP) {
-      // Update existing RSVP
       const { error } = await supabase
         .from('event_rsvps')
         .update({ response: selectedResponse })
@@ -161,7 +198,6 @@ export default function EventDetailPage() {
         setSelectedPersonId('');
       }
     } else {
-      // Insert new RSVP
       const { error } = await supabase
         .from('event_rsvps')
         .insert({
@@ -201,7 +237,6 @@ export default function EventDetailPage() {
   const handleSave = async () => {
     if (!event) return;
 
-    // If end_date is not provided, use start_date
     const eventData = {
       title: editData.title,
       start_date: editData.start_date,
@@ -362,7 +397,6 @@ export default function EventDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Back Button */}
       <Link
         href="/events"
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
@@ -371,7 +405,6 @@ export default function EventDetailPage() {
         Πίσω στα Events
       </Link>
 
-      {/* Event Details Card */}
       <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
         {isEditing ? (
           <div className="space-y-4">
@@ -383,9 +416,7 @@ export default function EventDetailPage() {
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Από *
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Από *</label>
                 <input
                   type="date"
                   value={editData.start_date}
@@ -394,9 +425,7 @@ export default function EventDetailPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Έως (προαιρετικό)
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Έως (προαιρετικό)</label>
                 <input
                   type="date"
                   value={editData.end_date}
@@ -407,9 +436,7 @@ export default function EventDetailPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Ώρα (προαιρετικό)
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Ώρα (προαιρετικό)</label>
                 <input
                   type="time"
                   value={editData.time}
@@ -418,9 +445,7 @@ export default function EventDetailPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Τοποθεσία (προαιρετικό)
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Τοποθεσία (προαιρετικό)</label>
                 <input
                   type="text"
                   value={editData.place}
@@ -486,25 +511,25 @@ export default function EventDetailPage() {
                   </p>
                 )}
                 {event.details && (
-                  <p className="text-gray-700 whitespace-pre-wrap text-lg">
+                  <p className="text-gray-700 mt-4 whitespace-pre-wrap">
                     {event.details}
                   </p>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 ml-4">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-purple-100 rounded-lg transition-colors"
                   title="Επεξεργασία"
                 >
-                  <Edit2 className="w-5 h-5 text-gray-600" />
+                  <Edit2 className="w-5 h-5 text-purple-600" />
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="p-3 hover:bg-red-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-red-100 rounded-lg transition-colors"
                   title="Διαγραφή"
                 >
-                  <Trash2 className="w-5 h-5 text-red-500" />
+                  <Trash2 className="w-5 h-5 text-red-600" />
                 </button>
               </div>
             </div>
@@ -512,7 +537,6 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      {/* RSVP Section */}
       <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
         <div className="flex items-center gap-3 mb-6">
           <UserCheck className="w-6 h-6 text-purple-600" />
@@ -521,37 +545,53 @@ export default function EventDetailPage() {
           </h2>
         </div>
 
-        {/* Add RSVP Form */}
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-6">
           <h3 className="font-semibold text-gray-800 mb-3">Πρόσθεσε Απάντηση</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <select
-              value={selectedPersonId}
-              onChange={(e) => setSelectedPersonId(e.target.value)}
-              className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
-            >
-              <option value="">Επέλεξε άτομο...</option>
-              {people.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <select
+                value={selectedPersonId}
+                onChange={(e) => {
+                  setSelectedPersonId(e.target.value);
+                  if (e.target.value && e.target.value !== 'other') setCustomName('');
+                }}
+                className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                disabled={!!customName.trim()}
+              >
+                <option value="">Επέλεξε άτομο...</option>
+                {people.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.name}
+                  </option>
+                ))}
+                <option value="other">✨ Άλλος</option>
+              </select>
 
-            <select
-              value={selectedResponse}
-              onChange={(e) => setSelectedResponse(e.target.value as any)}
-              className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
-            >
-              <option value="Ναι">✅ Ναι</option>
-              <option value="Όχι">❌ Όχι</option>
-              <option value="Μπορεί">🤔 Μπορεί</option>
-              <option value="Θα αργήσω">⏰ Θα αργήσω</option>
-            </select>
+              <select
+                value={selectedResponse}
+                onChange={(e) => setSelectedResponse(e.target.value as any)}
+                className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+              >
+                <option value="Ναι">✅ Ναι</option>
+                <option value="Όχι">❌ Όχι</option>
+                <option value="Μπορεί">🤔 Μπορεί</option>
+                <option value="Θα αργήσω">⏰ Θα αργήσω</option>
+              </select>
+            </div>
+
+            {(selectedPersonId === 'other' || customName) && (
+              <input
+                type="text"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="Γράψε το όνομα (π.χ. Γιάννης +1)"
+                className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+              />
+            )}
 
             <button
               onClick={handleAddRSVP}
-              disabled={!selectedPersonId}
+              disabled={!selectedPersonId && !customName.trim()}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Προσθήκη
@@ -559,7 +599,6 @@ export default function EventDetailPage() {
           </div>
         </div>
 
-        {/* RSVP List */}
         {rsvps.length > 0 ? (
           <div className="space-y-3">
             {['Ναι', 'Μπορεί', 'Θα αργήσω', 'Όχι'].map((responseType) => {
@@ -581,7 +620,7 @@ export default function EventDetailPage() {
                         className="bg-white px-3 py-2 rounded-lg shadow-sm flex items-center gap-2 group"
                       >
                         <span className="text-gray-800 font-medium">
-                          {rsvp.person?.name || 'Unknown'}
+                          {rsvp.custom_name || rsvp.person?.name || 'Unknown'}
                         </span>
                         <button
                           onClick={() => handleDeleteRSVP(rsvp.id)}
@@ -605,7 +644,6 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      {/* Photos Section */}
       <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-800">
