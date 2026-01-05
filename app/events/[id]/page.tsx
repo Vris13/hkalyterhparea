@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Calendar as CalIcon, Upload, Trash2, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, Calendar as CalIcon, Upload, Trash2, Edit2, Save, X, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
 interface Event {
@@ -23,6 +23,19 @@ interface Photo {
   created_at: string;
 }
 
+interface Person {
+  id: string;
+  name: string;
+}
+
+interface RSVP {
+  id: string;
+  event_id: string;
+  person_id: string;
+  response: 'Ναι' | 'Όχι' | 'Μπορεί' | 'Θα αργήσω';
+  person?: Person;
+}
+
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -30,6 +43,10 @@ export default function EventDetailPage() {
 
   const [event, setEvent] = useState<Event | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [rsvps, setRSVPs] = useState<RSVP[]>([]);
+  const [selectedPersonId, setSelectedPersonId] = useState<string>('');
+  const [selectedResponse, setSelectedResponse] = useState<'Ναι' | 'Όχι' | 'Μπορεί' | 'Θα αργήσω'>('Ναι');
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -44,6 +61,8 @@ export default function EventDetailPage() {
   useEffect(() => {
     fetchEvent();
     fetchPhotos();
+    fetchPeople();
+    fetchRSVPs();
   }, [eventId]);
 
   const fetchEvent = async () => {
@@ -75,12 +94,107 @@ export default function EventDetailPage() {
       .from('photos')
       .select('*')
       .eq('event_id', eventId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false});
 
     if (error) {
       console.error('Error fetching photos:', error);
     } else {
       setPhotos(data || []);
+    }
+  };
+
+  const fetchPeople = async () => {
+    const { data, error } = await supabase
+      .from('people')
+      .select('id, name')
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching people:', error);
+    } else {
+      setPeople(data || []);
+    }
+  };
+
+  const fetchRSVPs = async () => {
+    const { data, error } = await supabase
+      .from('event_rsvps')
+      .select('*, people(id, name)')
+      .eq('event_id', eventId);
+
+    if (error) {
+      console.error('Error fetching RSVPs:', error);
+    } else {
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(item => ({
+        id: item.id,
+        event_id: item.event_id,
+        person_id: item.person_id,
+        response: item.response,
+        person: Array.isArray(item.people) ? item.people[0] : item.people
+      }));
+      setRSVPs(transformedData as RSVP[]);
+    }
+  };
+
+  const handleAddRSVP = async () => {
+    if (!selectedPersonId) {
+      alert('Επέλεξε ένα άτομο');
+      return;
+    }
+
+    // Check if RSVP already exists
+    const existingRSVP = rsvps.find(r => r.person_id === selectedPersonId);
+
+    if (existingRSVP) {
+      // Update existing RSVP
+      const { error } = await supabase
+        .from('event_rsvps')
+        .update({ response: selectedResponse })
+        .eq('id', existingRSVP.id);
+
+      if (error) {
+        console.error('Error updating RSVP:', error);
+        alert('Σφάλμα κατά την ενημέρωση');
+      } else {
+        fetchRSVPs();
+        setSelectedPersonId('');
+      }
+    } else {
+      // Insert new RSVP
+      const { error } = await supabase
+        .from('event_rsvps')
+        .insert({
+          event_id: eventId,
+          person_id: selectedPersonId,
+          response: selectedResponse,
+        });
+
+      if (error) {
+        console.error('Error adding RSVP:', error);
+        alert('Σφάλμα κατά την προσθήκη');
+      } else {
+        fetchRSVPs();
+        setSelectedPersonId('');
+      }
+    }
+  };
+
+  const handleDeleteRSVP = async (rsvpId: string) => {
+    if (!confirm('Είσαι σίγουρος ότι θες να διαγράψεις αυτή την απάντηση;')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('event_rsvps')
+      .delete()
+      .eq('id', rsvpId);
+
+    if (error) {
+      console.error('Error deleting RSVP:', error);
+      alert('Σφάλμα κατά τη διαγραφή');
+    } else {
+      fetchRSVPs();
     }
   };
 
@@ -395,6 +509,99 @@ export default function EventDetailPage() {
               </div>
             </div>
           </>
+        )}
+      </div>
+
+      {/* RSVP Section */}
+      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
+        <div className="flex items-center gap-3 mb-6">
+          <UserCheck className="w-6 h-6 text-purple-600" />
+          <h2 className="text-2xl font-bold text-gray-800">
+            Ποιος Έρχεται
+          </h2>
+        </div>
+
+        {/* Add RSVP Form */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-6">
+          <h3 className="font-semibold text-gray-800 mb-3">Πρόσθεσε Απάντηση</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select
+              value={selectedPersonId}
+              onChange={(e) => setSelectedPersonId(e.target.value)}
+              className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+            >
+              <option value="">Επέλεξε άτομο...</option>
+              {people.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedResponse}
+              onChange={(e) => setSelectedResponse(e.target.value as any)}
+              className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+            >
+              <option value="Ναι">✅ Ναι</option>
+              <option value="Όχι">❌ Όχι</option>
+              <option value="Μπορεί">🤔 Μπορεί</option>
+              <option value="Θα αργήσω">⏰ Θα αργήσω</option>
+            </select>
+
+            <button
+              onClick={handleAddRSVP}
+              disabled={!selectedPersonId}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Προσθήκη
+            </button>
+          </div>
+        </div>
+
+        {/* RSVP List */}
+        {rsvps.length > 0 ? (
+          <div className="space-y-3">
+            {['Ναι', 'Μπορεί', 'Θα αργήσω', 'Όχι'].map((responseType) => {
+              const filtered = rsvps.filter(r => r.response === responseType);
+              if (filtered.length === 0) return null;
+
+              const emoji = responseType === 'Ναι' ? '✅' : responseType === 'Όχι' ? '❌' : responseType === 'Μπορεί' ? '🤔' : '⏰';
+              const bgColor = responseType === 'Ναι' ? 'bg-green-50 border-green-200' : responseType === 'Όχι' ? 'bg-red-50 border-red-200' : responseType === 'Μπορεί' ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200';
+
+              return (
+                <div key={responseType} className={`rounded-lg p-4 border-2 ${bgColor}`}>
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    {emoji} {responseType} ({filtered.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {filtered.map((rsvp) => (
+                      <div
+                        key={rsvp.id}
+                        className="bg-white px-3 py-2 rounded-lg shadow-sm flex items-center gap-2 group"
+                      >
+                        <span className="text-gray-800 font-medium">
+                          {rsvp.person?.name || 'Unknown'}
+                        </span>
+                        <button
+                          onClick={() => handleDeleteRSVP(rsvp.id)}
+                          className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <p className="text-gray-600">
+              Δεν υπάρχουν απαντήσεις ακόμα
+            </p>
+          </div>
         )}
       </div>
 

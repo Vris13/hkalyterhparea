@@ -88,6 +88,7 @@ export default function PersonPage() {
     } else {
       setPerson(editedPerson);
       setIsEditing(false);
+      router.refresh(); // Refresh to update the people list page
     }
   };
 
