@@ -47,7 +47,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
           </div>
           
           <h1 className="text-3xl font-bold text-center text-warm-800 mb-2">
-            Memory Book
+            Καλωσήρθατε στην Καλύτερη Παρέα!
           </h1>
           <p className="text-center text-warm-600 mb-8">
             Εισάγετε τον κωδικό για να συνεχίσετε
