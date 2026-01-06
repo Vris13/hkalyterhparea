@@ -20,7 +20,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <Link href="/" className="text-2xl font-bold text-white flex items-center gap-2">
-              <span className="text-3xl">⚡</span>
+              <span className="text-3xl">🍷</span>
               ηΚαλύτερηΠαρέα
             </Link>
             
