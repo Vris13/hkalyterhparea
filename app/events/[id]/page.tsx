@@ -268,51 +268,64 @@ export default function EventDetailPage() {
     }
   };
 
-  const handleUploadPhoto = () => {
-    // @ts-ignore
-    if (typeof window.cloudinary === 'undefined') {
-      alert('Cloudinary widget δεν είναι διαθέσιμο.');
+  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      alert('Cloudinary δεν είναι διαθέσιμο.');
       return;
     }
 
-    // @ts-ignore
-    const widget = window.cloudinary.createUploadWidget(
-      {
-        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-        uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-        sources: ['local', 'camera'],
-        multiple: true,
-        folder: 'memory-book/events',
-        tags: [`event_${eventId}`],
-      },
-      async (error: any, result: any) => {
-        if (error) {
-          console.error('Upload error:', error);
-          alert('Σφάλμα κατά το ανέβασμα');
-          return;
-        }
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+      formData.append('folder', 'memory-book/events');
+      formData.append('tags', `event_${eventId}`);
 
-        if (result.event === 'success') {
-          const photoUrl = result.info.secure_url;
-
-          const { error: photoError } = await supabase
-            .from('photos')
-            .insert({
-              url: photoUrl,
-              event_id: eventId,
-            });
-
-          if (photoError) {
-            console.error('Error saving photo:', photoError);
-            alert('Σφάλμα κατά την αποθήκευση φωτογραφίας');
-          } else {
-            fetchPhotos();
+      try {
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          {
+            method: 'POST',
+            body: formData,
           }
-        }
-      }
-    );
+        );
 
-    widget.open();
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const data = await response.json();
+        const photoUrl = data.secure_url;
+        const publicId = data.public_id;
+
+        const { data: photoData, error: photoError } = await supabase
+          .from('photos')
+          .insert({
+            url: photoUrl,
+            public_id: publicId,
+            event_id: eventId,
+          })
+          .select();
+
+        if (photoError) {
+          console.error('Error saving photo:', photoError);
+          alert(`Σφάλμα κατά την αποθήκευση φωτογραφίας: ${photoError.message || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('Σφάλμα κατά το ανέβασμα');
+      }
+    }
+
+    fetchPhotos();
+    e.target.value = '';
   };
 
   const handleDeletePhoto = async (photoId: string) => {
@@ -649,13 +662,18 @@ export default function EventDetailPage() {
           <h2 className="text-2xl font-bold text-gray-800">
             Φωτογραφίες ({photos.length})
           </h2>
-          <button
-            onClick={handleUploadPhoto}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-lg transition-all shadow-md"
-          >
+          <label className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-lg transition-all shadow-md cursor-pointer">
             <Upload className="w-5 h-5" />
             Ανέβασμα Φωτογραφιών
-          </button>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              capture="environment"
+              onChange={handleUploadPhoto}
+              className="hidden"
+            />
+          </label>
         </div>
 
         {photos.length > 0 ? (

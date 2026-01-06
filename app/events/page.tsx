@@ -573,11 +573,12 @@ export default function EventsPage() {
                               <img
                                 src={photo.url}
                                 alt="Event photo"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover cursor-pointer"
+                                onClick={() => window.open(photo.url, '_blank')}
                               />
                               <button
                                 onClick={() => handleDeletePhoto(photo.id, event.id)}
-                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -600,7 +601,7 @@ export default function EventsPage() {
 
       {/* Past Events */}
       {pastEvents.length > 0 && (
-        <div className="opacity-60">
+        <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
             Παρελθόντα Events 📚
           </h2>
@@ -612,25 +613,55 @@ export default function EventsPage() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      {event.title}
-                    </h3>
+                    <Link href={`/events/${event.id}`}>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-purple-600 transition-colors cursor-pointer">
+                        {event.title}
+                      </h3>
+                    </Link>
                     <div className="flex items-center gap-2 text-gray-600 mb-2">
                       <CalIcon className="w-4 h-4" />
                       <span>{formatDateRange(event.start_date, event.end_date)}</span>
                     </div>
+                    {event.time && (
+                      <p className="text-gray-600 mb-2">
+                        🕒 {event.time}
+                      </p>
+                    )}
+                    {event.place && (
+                      <p className="text-gray-600 mb-2">
+                        📍 {event.place}
+                      </p>
+                    )}
                     {event.details && (
                       <p className="text-gray-700 whitespace-pre-wrap text-sm">
                         {event.details}
                       </p>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleDeleteEvent(event.id)}
-                    className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingEventId(event.id);
+                        setEditData({
+                          title: event.title,
+                          start_date: event.start_date,
+                          end_date: event.end_date,
+                          time: event.time || '',
+                          place: event.place || '',
+                          details: event.details || '',
+                        });
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Edit2 className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(event.id)}
+                      className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-5 h-5 text-red-500" />
+                    </button>
+                  </div>
                 </div>
 
                 {photos[event.id]?.length > 0 && (
@@ -638,13 +669,20 @@ export default function EventsPage() {
                     {photos[event.id].slice(0, 4).map((photo) => (
                       <div
                         key={photo.id}
-                        className="aspect-square rounded-lg overflow-hidden bg-gray-100"
+                        className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100"
                       >
                         <img
                           src={photo.url}
                           alt="Event photo"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover cursor-pointer"
+                          onClick={() => window.open(photo.url, '_blank')}
                         />
+                        <button
+                          onClick={() => handleDeletePhoto(photo.id, event.id)}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>

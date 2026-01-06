@@ -15,19 +15,12 @@ interface Person {
   bio?: string;
 }
 
-interface Photo {
-  id: string;
-  url: string;
-  created_at: string;
-}
-
 export default function PersonPage() {
   const router = useRouter();
   const params = useParams();
   const personId = params.id as string;
   
   const [person, setPerson] = useState<Person | null>(null);
-  const [photos, setPhotos] = useState<Photo[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editedPerson, setEditedPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +28,6 @@ export default function PersonPage() {
   useEffect(() => {
     if (personId) {
       fetchPerson();
-      fetchPhotos();
     }
   }, [personId]);
 
@@ -53,20 +45,6 @@ export default function PersonPage() {
       setEditedPerson(data);
     }
     setLoading(false);
-  };
-
-  const fetchPhotos = async () => {
-    const { data, error } = await supabase
-      .from('photos')
-      .select('*')
-      .eq('person_id', personId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching photos:', error);
-    } else {
-      setPhotos(data || []);
-    }
   };
 
   const handleSave = async () => {
@@ -92,7 +70,7 @@ export default function PersonPage() {
     }
   };
 
-  const handleUploadPhoto = (isProfilePhoto: boolean = false) => {
+  const handleUploadPhoto = () => {
     // @ts-ignore
     if (typeof window.cloudinary === 'undefined') {
       alert('Cloudinary widget δεν είναι διαθέσιμο. Βεβαιωθείτε ότι έχετε ρυθμίσει τις μεταβλητές περιβάλλοντος.');
@@ -105,7 +83,7 @@ export default function PersonPage() {
         cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
         uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
         sources: ['local', 'camera'],
-        multiple: !isProfilePhoto,
+        multiple: false,
         folder: 'memory-book/people',
         tags: [`person_${personId}`],
       },
@@ -119,67 +97,23 @@ export default function PersonPage() {
         if (result.event === 'success') {
           const photoUrl = result.info.secure_url;
 
-          // If it's a profile photo change, only update profile photo
-          if (isProfilePhoto) {
-            const { error: profileError } = await supabase
-              .from('people')
-              .update({ profile_photo: photoUrl })
-              .eq('id', personId);
-            
-            if (profileError) {
-              console.error('Error saving photo:', profileError);
-              alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας');
-            } else {
-              setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
-            }
+          const { error: profileError } = await supabase
+            .from('people')
+            .update({ profile_photo: photoUrl })
+            .eq('id', personId);
+          
+          if (profileError) {
+            console.error('Error saving photo:', profileError);
+            alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας');
           } else {
-            // If this is the first photo, set as profile photo
-            if (!person?.profile_photo && photos.length === 0) {
-              await supabase
-                .from('people')
-                .update({ profile_photo: photoUrl })
-                .eq('id', personId);
-              
-              setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
-            }
-
-            // Save to photos table
-            const { error: photoError } = await supabase
-              .from('photos')
-              .insert({
-                url: photoUrl,
-                person_id: personId,
-              });
-
-            if (photoError) {
-              console.error('Error saving photo:', photoError);
-            } else {
-              fetchPhotos();
-            }
+            setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
+            router.refresh();
           }
         }
       }
     );
 
     widget.open();
-  };
-
-  const handleDeletePhoto = async (photoId: string) => {
-    if (!confirm('Είσαι σίγουρος ότι θες να διαγράψεις αυτή τη φωτογραφία;')) {
-      return;
-    }
-
-    const { error } = await supabase
-      .from('photos')
-      .delete()
-      .eq('id', photoId);
-
-    if (error) {
-      console.error('Error deleting photo:', error);
-      alert('Σφάλμα κατά τη διαγραφή');
-    } else {
-      fetchPhotos();
-    }
   };
 
   const formatDate = (dateString: string) => {
@@ -229,39 +163,8 @@ export default function PersonPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Profile Info */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Profile Photo */}
-          <div className="bg-white rounded-2xl overflow-hidden shadow-md">
-            <div className="aspect-square bg-gradient-to-br from-peach-100 to-warm-100 relative group">
-              {person.profile_photo ? (
-                <img
-                  src={person.profile_photo}
-                  alt={person.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-8xl font-bold text-peach-500">
-                    {person.name.charAt(0)}
-                  </span>
-                </div>
-              )}
-              {isEditing && (
-                <button
-                  onClick={() => handleUploadPhoto(true)}
-                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <div className="text-center text-white">
-                    <Upload className="w-12 h-12 mx-auto mb-2" />
-                    <p className="font-semibold">Αλλαγή Φωτογραφίας</p>
-                  </div>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Info Card */}
+        {/* Info Card - Right on Desktop, Below Photo on Mobile */}
+        <div className="lg:col-span-2 order-2 lg:order-2">
           <div className="bg-white rounded-2xl p-6 shadow-md space-y-4">
             {!isEditing ? (
               <>
@@ -389,54 +292,32 @@ export default function PersonPage() {
           </div>
         </div>
 
-        {/* Right Column - Photo Gallery */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl p-6 shadow-md">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-warm-800">
-                Φωτογραφίες ({photos.length})
-              </h2>
-              <button
-                onClick={() => handleUploadPhoto(false)}
-                className="flex items-center gap-2 bg-peach-500 hover:bg-peach-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
-              >
-                <Upload className="w-4 h-4" />
-                Ανέβασμα
-              </button>
+        {/* Profile Photo - Left on Desktop, Top on Mobile */}
+        <div className="lg:col-span-1 order-1 lg:order-1">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-md">
+            <div className="aspect-square bg-gradient-to-br from-peach-100 to-warm-100 relative">
+              {person.profile_photo ? (
+                <img
+                  src={person.profile_photo}
+                  alt={person.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-8xl font-bold text-peach-500">
+                    {person.name.charAt(0)}
+                  </span>
+                </div>
+              )}
             </div>
-
-            {photos.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {photos.map((photo) => (
-                  <div
-                    key={photo.id}
-                    className="relative group aspect-square rounded-lg overflow-hidden bg-warm-100"
-                  >
-                    <img
-                      src={photo.url}
-                      alt="Photo"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => handleDeletePhoto(photo.id)}
-                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <p className="text-warm-600 mb-4">
-                  Δεν υπάρχουν φωτογραφίες ακόμα
-                </p>
+            {isEditing && (
+              <div className="p-4">
                 <button
-                  onClick={() => handleUploadPhoto(false)}
-                  className="inline-flex items-center gap-2 bg-peach-500 hover:bg-peach-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                  onClick={handleUploadPhoto}
+                  className="w-full flex items-center justify-center gap-2 bg-peach-100 hover:bg-peach-200 text-peach-800 font-semibold py-3 rounded-lg transition-colors"
                 >
-                  <Upload className="w-5 h-5" />
-                  Ανέβασε την πρώτη φωτογραφία
+                  <Upload className="w-4 h-4" />
+                  Αλλαγή Φωτογραφίας
                 </button>
               </div>
             )}
