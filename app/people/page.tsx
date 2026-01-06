@@ -68,7 +68,7 @@ export default async function PeoplePage() {
           <Link
             key={person.id}
             href={`/people/${person.id}`}
-            className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all transform hover:scale-[1.02]"
+            className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all transform hover:scale-[1.02]"
           >
             {/* Profile Photo */}
             <div className="aspect-square bg-gradient-to-br from-peach-100 to-warm-100 relative">
@@ -89,14 +89,14 @@ export default async function PeoplePage() {
 
             {/* Info */}
             <div className="p-4">
-              <h3 className="text-xl font-bold text-warm-800 mb-1">
+              <h3 className="text-xl font-bold text-warm-800 dark:text-gray-100 mb-1">
                 {person.name}
               </h3>
-              <p className="text-warm-600 text-sm mb-2">
+              <p className="text-warm-600 dark:text-gray-300 text-sm mb-2">
                 🎂 {formatBirthday(person.birthday)}
               </p>
               {person.bio && (
-                <p className="text-warm-700 text-sm line-clamp-2">
+                <p className="text-warm-700 dark:text-gray-200 text-sm line-clamp-2">
                   {person.bio}
                 </p>
               )}

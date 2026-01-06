@@ -105,7 +105,7 @@ export default function CalendarGrid({ people, events }: CalendarGridProps) {
     // Empty cells for days before month starts
     for (let i = 0; i < adjustedStartDay; i++) {
       days.push(
-        <div key={`empty-${i}`} className="min-h-[100px] bg-gray-50"></div>
+        <div key={`empty-${i}`} className="min-h-[100px] bg-gray-50 dark:bg-gray-900"></div>
       );
     }
 
@@ -117,12 +117,12 @@ export default function CalendarGrid({ people, events }: CalendarGridProps) {
       days.push(
         <div
           key={day}
-          className={`min-h-[100px] p-2 border border-gray-200 bg-white ${
+          className={`min-h-[100px] p-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 ${
             today ? 'ring-2 ring-blue-500' : ''
           }`}
         >
           <div className={`text-sm font-semibold mb-1 ${
-            today ? 'bg-blue-500 text-white w-7 h-7 rounded-full flex items-center justify-center' : 'text-gray-700'
+            today ? 'bg-blue-500 text-white w-7 h-7 rounded-full flex items-center justify-center' : 'text-gray-700 dark:text-gray-200'
           }`}>
             {day}
           </div>
@@ -165,7 +165,7 @@ export default function CalendarGrid({ people, events }: CalendarGridProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -175,7 +175,7 @@ export default function CalendarGrid({ people, events }: CalendarGridProps) {
           <ChevronLeft className="w-5 h-5" />
         </button>
         
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
           {MONTHS_GR[month]} {year}
         </h2>
         
@@ -193,7 +193,7 @@ export default function CalendarGrid({ people, events }: CalendarGridProps) {
         {DAYS_GR.map((day, index) => (
           <div
             key={index}
-            className="text-center font-semibold text-gray-600 py-2 bg-gray-50 border border-gray-200"
+            className="text-center font-semibold text-gray-600 dark:text-gray-300 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
           >
             {day}
           </div>

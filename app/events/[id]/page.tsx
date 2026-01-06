@@ -389,7 +389,7 @@ export default function EventDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-pulse text-gray-600">Φόρτωση...</div>
+        <div className="animate-pulse text-gray-600 dark:text-gray-300">Φόρτωση...</div>
       </div>
     );
   }
@@ -397,7 +397,7 @@ export default function EventDetailPage() {
   if (!event) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-600 text-lg mb-4">Event δεν βρέθηκε</p>
+        <p className="text-gray-600 dark:text-gray-300 text-lg mb-4">Event δεν βρέθηκε</p>
         <Link
           href="/events"
           className="text-purple-600 hover:text-purple-700 font-semibold"
@@ -412,58 +412,58 @@ export default function EventDetailPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <Link
         href="/events"
-        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+        className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
         Πίσω στα Events
       </Link>
 
-      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
         {isEditing ? (
           <div className="space-y-4">
             <input
               type="text"
               value={editData.title}
               onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none text-2xl font-bold"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none text-2xl font-bold bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Από *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Από *</label>
                 <input
                   type="date"
                   value={editData.start_date}
                   onChange={(e) => setEditData({ ...editData, start_date: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Έως (προαιρετικό)</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Έως (προαιρετικό)</label>
                 <input
                   type="date"
                   value={editData.end_date}
                   onChange={(e) => setEditData({ ...editData, end_date: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                 />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Ώρα (προαιρετικό)</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Ώρα (προαιρετικό)</label>
                 <input
                   type="time"
                   value={editData.time}
                   onChange={(e) => setEditData({ ...editData, time: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Τοποθεσία (προαιρετικό)</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Τοποθεσία (προαιρετικό)</label>
                 <input
                   type="text"
                   value={editData.place}
                   onChange={(e) => setEditData({ ...editData, place: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                   placeholder="π.χ. Χανιά, Κρήτη"
                 />
               </div>
@@ -472,7 +472,7 @@ export default function EventDetailPage() {
               value={editData.details}
               onChange={(e) => setEditData({ ...editData, details: e.target.value })}
               rows={4}
-              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none resize-none"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
               placeholder="Λεπτομέρειες..."
             />
             <div className="flex gap-3">
@@ -506,25 +506,25 @@ export default function EventDetailPage() {
           <>
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                   {event.title}
                 </h1>
-                <div className="flex items-center gap-2 text-gray-600 mb-4">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mb-4">
                   <CalIcon className="w-5 h-5" />
                   <span className="text-lg">{formatDateRange(event.start_date, event.end_date)}</span>
                 </div>
                 {event.time && (
-                  <p className="text-gray-600 text-lg mb-3">
+                  <p className="text-gray-600 dark:text-gray-300 text-lg mb-3">
                     🕒 {event.time}
                   </p>
                 )}
                 {event.place && (
-                  <p className="text-gray-600 text-lg mb-3">
+                  <p className="text-gray-600 dark:text-gray-300 text-lg mb-3">
                     📍 {event.place}
                   </p>
                 )}
                 {event.details && (
-                  <p className="text-gray-700 mt-4 whitespace-pre-wrap">
+                  <p className="text-gray-700 dark:text-gray-200 mt-4 whitespace-pre-wrap">
                     {event.details}
                   </p>
                 )}
@@ -550,16 +550,16 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
         <div className="flex items-center gap-3 mb-6">
           <UserCheck className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
             Ποιος Έρχεται
           </h2>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">Πρόσθεσε Απάντηση</h3>
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 rounded-xl p-4 mb-6">
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Πρόσθεσε Απάντηση</h3>
           <div className="grid grid-cols-1 gap-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <select
@@ -568,7 +568,7 @@ export default function EventDetailPage() {
                   setSelectedPersonId(e.target.value);
                   if (e.target.value && e.target.value !== 'other') setCustomName('');
                 }}
-                className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                 disabled={!!customName.trim()}
               >
                 <option value="">Επέλεξε άτομο...</option>
@@ -583,7 +583,7 @@ export default function EventDetailPage() {
               <select
                 value={selectedResponse}
                 onChange={(e) => setSelectedResponse(e.target.value as any)}
-                className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
               >
                 <option value="Ναι">✅ Ναι</option>
                 <option value="Όχι">❌ Όχι</option>
@@ -598,7 +598,7 @@ export default function EventDetailPage() {
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
                 placeholder="Γράψε το όνομα (π.χ. Γιάννης +1)"
-                className="px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
               />
             )}
 
@@ -623,16 +623,16 @@ export default function EventDetailPage() {
 
               return (
                 <div key={responseType} className={`rounded-lg p-4 border-2 ${bgColor}`}>
-                  <h4 className="font-semibold text-gray-800 mb-2">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
                     {emoji} {responseType} ({filtered.length})
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {filtered.map((rsvp) => (
                       <div
                         key={rsvp.id}
-                        className="bg-white px-3 py-2 rounded-lg shadow-sm flex items-center gap-2 group"
+                        className="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm flex items-center gap-2 group"
                       >
-                        <span className="text-gray-800 font-medium">
+                        <span className="text-gray-800 dark:text-gray-100 font-medium">
                           {rsvp.custom_name || rsvp.person?.name || 'Unknown'}
                         </span>
                         <button
@@ -649,17 +649,17 @@ export default function EventDetailPage() {
             })}
           </div>
         ) : (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-600">
+          <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
+            <p className="text-gray-600 dark:text-gray-300">
               Δεν υπάρχουν απαντήσεις ακόμα
             </p>
           </div>
         )}
       </div>
 
-      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
             Φωτογραφίες ({photos.length})
           </h2>
           <label className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-lg transition-all shadow-md cursor-pointer">
@@ -699,11 +699,11 @@ export default function EventDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-gray-50 rounded-lg">
-            <p className="text-gray-600 text-lg mb-4">
+          <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-lg">
+            <p className="text-gray-600 dark:text-gray-300 text-lg mb-4">
               Δεν υπάρχουν φωτογραφίες ακόμα
             </p>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               Πρόσθεσε φωτογραφίες για να δημιουργήσεις αναμνήσεις από αυτό το event!
             </p>
           </div>

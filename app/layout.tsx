@@ -42,7 +42,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} antialiased bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 min-h-screen`}
+        className={`${geistSans.variable} antialiased bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-800 min-h-screen`}
         suppressHydrationWarning
       >
         <PasswordGate>

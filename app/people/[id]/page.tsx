@@ -166,14 +166,14 @@ export default function PersonPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Info Card - Right on Desktop, Below Photo on Mobile */}
         <div className="lg:col-span-2 order-2 lg:order-2">
-          <div className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md space-y-4">
             {!isEditing ? (
               <>
                 <div className="flex items-start gap-3">
                   <Cake className="w-5 h-5 text-peach-500 mt-0.5" />
                   <div>
                     <p className="text-sm text-warm-600 mb-1">Γενέθλια</p>
-                    <p className="font-semibold text-warm-800">
+                    <p className="font-semibold text-warm-800 dark:text-gray-100">
                       {formatDate(person.birthday)}
                     </p>
                   </div>
@@ -186,7 +186,7 @@ export default function PersonPage() {
                       <p className="text-sm text-warm-600 mb-1">Τηλέφωνο</p>
                       <a
                         href={`tel:${person.phone}`}
-                        className="font-semibold text-warm-800 hover:text-peach-600"
+                        className="font-semibold text-warm-800 dark:text-gray-100 hover:text-peach-600"
                       >
                         {person.phone}
                       </a>
@@ -197,7 +197,7 @@ export default function PersonPage() {
                 {person.bio && (
                   <div>
                     <p className="text-sm text-warm-600 mb-2">Βιογραφικό</p>
-                    <p className="text-warm-800 whitespace-pre-wrap">
+                    <p className="text-warm-800 dark:text-gray-100 whitespace-pre-wrap">
                       {person.bio}
                     </p>
                   </div>
@@ -223,7 +223,7 @@ export default function PersonPage() {
                     onChange={(e) =>
                       setEditedPerson(prev => prev ? { ...prev, name: e.target.value } : null)
                     }
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                   />
                 </div>
 
@@ -237,7 +237,7 @@ export default function PersonPage() {
                     onChange={(e) =>
                       setEditedPerson(prev => prev ? { ...prev, birthday: e.target.value } : null)
                     }
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                   />
                 </div>
 
@@ -251,7 +251,7 @@ export default function PersonPage() {
                     onChange={(e) =>
                       setEditedPerson(prev => prev ? { ...prev, phone: e.target.value } : null)
                     }
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                   />
                 </div>
 
@@ -265,7 +265,7 @@ export default function PersonPage() {
                       setEditedPerson(prev => prev ? { ...prev, bio: e.target.value } : null)
                     }
                     rows={4}
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 focus:border-peach-400 focus:outline-none resize-none"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                   />
                 </div>
 
@@ -295,7 +295,7 @@ export default function PersonPage() {
 
         {/* Profile Photo - Left on Desktop, Top on Mobile */}
         <div className="lg:col-span-1 order-1 lg:order-1">
-          <div className="bg-white rounded-2xl overflow-hidden shadow-md">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md">
             <div className="aspect-square bg-gradient-to-br from-peach-100 to-warm-100 relative">
               {person.profile_photo ? (
                 <img

@@ -57,10 +57,10 @@ export default async function CalendarPage() {
           <CalendarIcon className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">
             Ημερολόγιο
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-300">
             Όλα τα events και γενέθλια της παρέας
           </p>
         </div>

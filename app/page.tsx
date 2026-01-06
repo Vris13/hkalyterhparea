@@ -83,12 +83,12 @@ export default async function Home() {
     <div className="min-h-[70vh] space-y-8">
       {/* Today's Birthdays */}
       {todaysBirthdays.length > 0 && (
-        <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-pink-300">
+        <div className="bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900 dark:to-purple-900 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-pink-300 dark:border-pink-700">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-3 rounded-full">
               <Cake className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
               Σήμερα έχουν γενέθλια! 🎂
             </h2>
           </div>
@@ -98,7 +98,7 @@ export default async function Home() {
               <Link
                 key={person.id}
                 href={`/people/${person.id}`}
-                className="flex items-center gap-4 bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all"
+                className="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-xl transition-all"
               >
                 {person.profile_photo ? (
                   <img
@@ -114,8 +114,8 @@ export default async function Home() {
                   </div>
                 )}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">{person.name}</h3>
-                  <p className="text-gray-600">Χρόνια Πολλά! 🎉</p>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">{person.name}</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Χρόνια Πολλά! 🎉</p>
                 </div>
               </Link>
             ))}
@@ -125,12 +125,12 @@ export default async function Home() {
 
       {/* Today's Events */}
       {todaysEvents.length > 0 && (
-        <div className="bg-gradient-to-r from-purple-100 to-orange-100 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-purple-300">
+        <div className="bg-gradient-to-r from-purple-100 to-orange-100 dark:from-purple-900 dark:to-orange-900 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-purple-300 dark:border-purple-700">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gradient-to-r from-purple-600 to-orange-500 p-3 rounded-full">
               <PartyPopper className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
               Σημερινά Events 🎊
             </h2>
           </div>
@@ -140,24 +140,24 @@ export default async function Home() {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="block bg-white rounded-xl p-4 md:p-6 shadow-md hover:shadow-xl transition-all"
+                className="block bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 shadow-md hover:shadow-xl transition-all"
               >
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h3>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{event.title}</h3>
                 
                 {event.time && (
-                  <p className="text-gray-600 mb-2">
+                  <p className="text-gray-600 dark:text-gray-300 mb-2">
                     🕒 {event.time}
                   </p>
                 )}
                 
                 {event.place && (
-                  <p className="text-gray-600 mb-2">
+                  <p className="text-gray-600 dark:text-gray-300 mb-2">
                     📍 {event.place}
                   </p>
                 )}
                 
                 {event.details && (
-                  <p className="text-gray-700 text-sm">
+                  <p className="text-gray-700 dark:text-gray-200 text-sm">
                     {event.details}
                   </p>
                 )}
@@ -170,12 +170,12 @@ export default async function Home() {
       {/* No events today */}
       {todaysBirthdays.length === 0 && todaysEvents.length === 0 && (
         <div className="text-center py-16">
-          <div className="bg-white rounded-2xl p-8 shadow-md inline-block">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md inline-block">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
               Καμία ειδική μέρα σήμερα
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               Δεν υπάρχουν γενέθλια ή events για σήμερα
             </p>
           </div>

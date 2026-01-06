@@ -271,7 +271,7 @@ export default function EventsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-pulse text-gray-600">Φόρτωση...</div>
+        <div className="animate-pulse text-gray-600 dark:text-gray-300">Φόρτωση...</div>
       </div>
     );
   }
@@ -285,10 +285,10 @@ export default function EventsPage() {
             <PartyPopper className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">
               Events
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               Τα γεγονότα της παρέας μας
             </p>
           </div>
@@ -307,14 +307,14 @@ export default function EventsPage() {
       {showCreateForm && (
         <form
           onSubmit={handleCreateEvent}
-          className="bg-white rounded-2xl p-6 shadow-md space-y-4"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md space-y-4"
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
             Δημιουργία Event
           </h2>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Τίτλος *
             </label>
             <input
@@ -322,14 +322,14 @@ export default function EventsPage() {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
-              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
               placeholder="π.χ. Κρασιά"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Από *
               </label>
               <input
@@ -337,12 +337,12 @@ export default function EventsPage() {
                 value={formData.start_date}
                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                 required
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Έως (προαιρετικό)
               </label>
               <input
@@ -350,7 +350,7 @@ export default function EventsPage() {
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                 min={formData.start_date}
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                 placeholder="Άδειασε για ημερήσιο event"
               />
               <p className="text-sm text-gray-500 mt-1">
@@ -361,40 +361,40 @@ export default function EventsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Ώρα (προαιρετικό)
               </label>
               <input
                 type="time"
                 value={formData.time}
                 onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Τοποθεσία (προαιρετικό)
               </label>
               <input
                 type="text"
                 value={formData.place}
                 onChange={(e) => setFormData({ ...formData, place: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                 placeholder="π.χ. Αερικό"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Λεπτομέρειες
             </label>
             <textarea
               value={formData.details}
               onChange={(e) => setFormData({ ...formData, details: e.target.value })}
               rows={3}
-              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none transition-colors resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
               placeholder="π.χ. Οι ρετσίνες Γεωργιάδη είναι φίλοι μας."
             />
           </div>
@@ -423,7 +423,7 @@ export default function EventsPage() {
       {/* Upcoming Events */}
       {upcomingEvents.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
             Προσεχή Events 🎊
           </h2>
           <div className="space-y-6">
@@ -438,20 +438,20 @@ export default function EventsPage() {
                       type="text"
                       value={editData.title}
                       onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none text-xl font-bold"
+                      className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none text-xl font-bold bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                     />
                     <div className="grid grid-cols-2 gap-4">
                       <input
                         type="date"
                         value={editData.start_date}
                         onChange={(e) => setEditData({ ...editData, start_date: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                       />
                       <input
                         type="date"
                         value={editData.end_date}
                         onChange={(e) => setEditData({ ...editData, end_date: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -459,14 +459,14 @@ export default function EventsPage() {
                         type="time"
                         value={editData.time}
                         onChange={(e) => setEditData({ ...editData, time: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                         placeholder="Ώρα"
                       />
                       <input
                         type="text"
                         value={editData.place}
                         onChange={(e) => setEditData({ ...editData, place: e.target.value })}
-                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                         placeholder="Τοποθεσία"
                       />
                     </div>
@@ -474,7 +474,7 @@ export default function EventsPage() {
                       value={editData.details}
                       onChange={(e) => setEditData({ ...editData, details: e.target.value })}
                       rows={3}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:outline-none resize-none"
+                      className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-400 focus:outline-none resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                     />
                     <div className="flex gap-2">
                       <button
@@ -498,26 +498,26 @@ export default function EventsPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <Link href={`/events/${event.id}`}>
-                          <h3 className="text-2xl font-bold text-gray-800 mb-2 hover:text-purple-600 transition-colors cursor-pointer">
+                          <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 hover:text-purple-600 transition-colors cursor-pointer">
                             {event.title}
                           </h3>
                         </Link>
-                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mb-2">
                           <CalIcon className="w-4 h-4" />
                           <span>{formatDateRange(event.start_date, event.end_date)}</span>
                         </div>
                         {event.time && (
-                          <p className="text-gray-600 mb-2">
+                          <p className="text-gray-600 dark:text-gray-300 mb-2">
                             🕒 {event.time}
                           </p>
                         )}
                         {event.place && (
-                          <p className="text-gray-600 mb-2">
+                          <p className="text-gray-600 dark:text-gray-300 mb-2">
                             📍 {event.place}
                           </p>
                         )}
                         {event.details && (
-                          <p className="text-gray-700 whitespace-pre-wrap">
+                          <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
                             {event.details}
                           </p>
                         )}
@@ -551,7 +551,7 @@ export default function EventsPage() {
                     {/* Photos */}
                     <div className="mt-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-800">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-100">
                           Φωτογραφίες ({photos[event.id]?.length || 0})
                         </h4>
                         <button
@@ -586,7 +586,7 @@ export default function EventsPage() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-600 text-sm text-center py-4">
+                        <p className="text-gray-600 dark:text-gray-300 text-sm text-center py-4">
                           Δεν υπάρχουν φωτογραφίες ακόμα
                         </p>
                       )}
@@ -602,7 +602,7 @@ export default function EventsPage() {
       {/* Past Events */}
       {pastEvents.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
             Παρελθόντα Events 📚
           </h2>
           <div className="space-y-6">
@@ -614,26 +614,26 @@ export default function EventsPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <Link href={`/events/${event.id}`}>
-                      <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-purple-600 transition-colors cursor-pointer">
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 hover:text-purple-600 transition-colors cursor-pointer">
                         {event.title}
                       </h3>
                     </Link>
-                    <div className="flex items-center gap-2 text-gray-600 mb-2">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mb-2">
                       <CalIcon className="w-4 h-4" />
                       <span>{formatDateRange(event.start_date, event.end_date)}</span>
                     </div>
                     {event.time && (
-                      <p className="text-gray-600 mb-2">
+                      <p className="text-gray-600 dark:text-gray-300 mb-2">
                         🕒 {event.time}
                       </p>
                     )}
                     {event.place && (
-                      <p className="text-gray-600 mb-2">
+                      <p className="text-gray-600 dark:text-gray-300 mb-2">
                         📍 {event.place}
                       </p>
                     )}
                     {event.details && (
-                      <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                      <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap text-sm">
                         {event.details}
                       </p>
                     )}
@@ -695,7 +695,7 @@ export default function EventsPage() {
 
       {events.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-gray-600 text-lg mb-4">
+          <p className="text-gray-600 dark:text-gray-300 text-lg mb-4">
             Δεν υπάρχουν events ακόμα
           </p>
           <button
