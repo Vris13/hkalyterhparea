@@ -143,7 +143,7 @@ export default function CalendarGrid({ people, events }: CalendarGridProps) {
             {dayEvents.slice(0, 3).map((event) => (
               <Link
                 key={event.id}
-                href="/events"
+                href={`/events/${event.id}`}
                 className={`block text-xs px-2 py-1 ${getEventColor(event, new Date(year, month, day))} text-white rounded truncate hover:opacity-80 transition-opacity`}
               >
                 {event.title}
