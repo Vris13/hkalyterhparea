@@ -669,7 +669,6 @@ export default function EventDetailPage() {
               type="file"
               accept="image/*"
               multiple
-              capture="environment"
               onChange={handleUploadPhoto}
               className="hidden"
             />

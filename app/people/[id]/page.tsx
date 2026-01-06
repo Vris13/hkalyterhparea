@@ -107,6 +107,7 @@ export default function PersonPage() {
             alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας');
           } else {
             setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
+            setEditedPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
             router.refresh();
           }
         }
