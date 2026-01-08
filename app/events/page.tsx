@@ -414,7 +414,7 @@ export default function EventsPage() {
                 setShowCreateForm(false);
                 setFormData({ title: '', start_date: '', end_date: '', time: '', place: '', details: '' });
               }}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg transition-colors"
+              className="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-semibold py-3 rounded-lg transition-colors"
             >
               Ακύρωση
             </button>
@@ -432,7 +432,7 @@ export default function EventsPage() {
             {upcomingEvents.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-2xl p-6 shadow-md"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md"
               >
                 {editingEventId === event.id ? (
                   <div className="space-y-4">
@@ -488,7 +488,7 @@ export default function EventsPage() {
                       </button>
                       <button
                         onClick={() => setEditingEventId(null)}
-                        className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg transition-colors"
+                        className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-semibold px-4 py-2 rounded-lg transition-colors"
                       >
                         <X className="w-4 h-4" />
                         Ακύρωση
@@ -537,9 +537,9 @@ export default function EventsPage() {
                               details: event.details || '',
                             });
                           }}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                         >
-                          <Edit2 className="w-5 h-5 text-gray-600" />
+                          <Edit2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                         </button>
                         <button
                           onClick={() => handleDeleteEvent(event.id)}
@@ -611,7 +611,7 @@ export default function EventsPage() {
             {pastEvents.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-2xl p-6 shadow-md"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -653,9 +653,9 @@ export default function EventsPage() {
                           details: event.details || '',
                         });
                       }}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <Edit2 className="w-5 h-5 text-gray-600" />
+                      <Edit2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                     </button>
                     <button
                       onClick={() => handleDeleteEvent(event.id)}
