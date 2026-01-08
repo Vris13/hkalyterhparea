@@ -240,11 +240,13 @@ export default function EventsPage() {
     const endDate = new Date(end);
     
     const startStr = startDate.toLocaleDateString('el-GR', {
+      weekday: 'long',
       day: 'numeric',
       month: 'long',
     });
     
     const endStr = endDate.toLocaleDateString('el-GR', {
+      weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',

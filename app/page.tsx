@@ -218,7 +218,7 @@ export default async function Home() {
               >
                 <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{event.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-2">
-                  📅 {new Date(event.start_date).toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  📅 {new Date(event.start_date).toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
                 {event.time && (
                   <p className="text-gray-600 dark:text-gray-300 mb-2">
@@ -257,7 +257,7 @@ export default async function Home() {
               >
                 <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{event.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-2">
-                  📅 {new Date(event.start_date).toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  📅 {new Date(event.start_date).toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
                 {event.place && (
                   <p className="text-gray-600 dark:text-gray-300 mb-2">
