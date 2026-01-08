@@ -38,28 +38,18 @@ export default async function PeoplePage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-peach-500 p-3 rounded-full">
-            <Users className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-warm-800">
-              Άνθρωποι
-            </h1>
-            <p className="text-warm-600">
-              Η παρέα μας ({people.length} άτομα)
-            </p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="bg-peach-500 p-3 rounded-full">
+          <Users className="w-6 h-6 text-white" />
         </div>
-        
-        <Link
-          href="/people/new"
-          className="flex items-center gap-2 bg-peach-500 hover:bg-peach-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors self-start sm:self-auto"
-        >
-          <Plus className="w-5 h-5" />
-          Προσθήκη Ατόμου
-        </Link>
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-warm-800">
+            Άνθρωποι
+          </h1>
+          <p className="text-warm-600">
+            Η παρέα μας ({people.length} άτομα)
+          </p>
+        </div>
       </div>
 
       {/* People Grid */}
