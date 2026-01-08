@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import CalendarGrid from '@/components/CalendarGrid';
 
+export const revalidate = 0; // Disable cache for this page
+
 interface Person {
   id: string;
   name: string;
