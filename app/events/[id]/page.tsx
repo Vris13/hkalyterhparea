@@ -46,6 +46,7 @@ export default function EventDetailPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [rsvps, setRSVPs] = useState<RSVP[]>([]);
+  const [attendances, setAttendances] = useState<string[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
   const [customName, setCustomName] = useState<string>('');
   const [selectedResponse, setSelectedResponse] = useState<'Ναι' | 'Όχι' | 'Μπορεί' | 'Θα αργήσω'>('Ναι');
@@ -65,6 +66,7 @@ export default function EventDetailPage() {
     fetchPhotos();
     fetchPeople();
     fetchRSVPs();
+    fetchAttendances();
   }, [eventId]);
 
   const fetchEvent = async () => {
@@ -136,6 +138,49 @@ export default function EventDetailPage() {
         person: Array.isArray(item.people) ? item.people[0] : item.people
       }));
       setRSVPs(transformedData as RSVP[]);
+    }
+  };
+
+  const fetchAttendances = async () => {
+    const { data, error } = await supabase
+      .from('event_attendances')
+      .select('person_id')
+      .eq('event_id', eventId);
+
+    if (error) {
+      console.error('Error fetching attendances:', error);
+    } else {
+      setAttendances((data || []).map(a => a.person_id));
+    }
+  };
+
+  const toggleAttendance = async (personId: string) => {
+    const isAttending = attendances.includes(personId);
+
+    if (isAttending) {
+      const { error } = await supabase
+        .from('event_attendances')
+        .delete()
+        .eq('event_id', eventId)
+        .eq('person_id', personId);
+
+      if (error) {
+        console.error('Error removing attendance:', error);
+        alert('Σφάλμα κατά την αφαίρεση');
+      } else {
+        setAttendances(prev => prev.filter(id => id !== personId));
+      }
+    } else {
+      const { error } = await supabase
+        .from('event_attendances')
+        .insert({ event_id: eventId, person_id: personId });
+
+      if (error) {
+        console.error('Error adding attendance:', error);
+        alert('Σφάλμα κατά την προσθήκη');
+      } else {
+        setAttendances(prev => [...prev, personId]);
+      }
     }
   };
 
@@ -654,6 +699,61 @@ export default function EventDetailPage() {
           <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
             <p className="text-gray-600 dark:text-gray-300">
               Δεν υπάρχουν απαντήσεις ακόμα
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
+        <div className="flex items-center gap-3 mb-6">
+          <UserCheck className="w-6 h-6 text-green-600" />
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            Παρουσίες ({attendances.length})
+          </h2>
+        </div>
+
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-xl p-4 mb-6">
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Επέλεξε όσους ήρθαν</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {people.map((person) => (
+              <button
+                key={person.id}
+                onClick={() => toggleAttendance(person.id)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  attendances.includes(person.id)
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:border-green-400'
+                }`}
+              >
+                {attendances.includes(person.id) && '✓ '}
+                {person.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {attendances.length > 0 ? (
+          <div className="bg-green-50 dark:bg-green-900 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
+              ✅ Ήρθαν ({attendances.length})
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {people
+                .filter(p => attendances.includes(p.id))
+                .map((person) => (
+                  <span
+                    key={person.id}
+                    className="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-gray-800 dark:text-gray-100 font-medium"
+                  >
+                    {person.name}
+                  </span>
+                ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
+            <p className="text-gray-600 dark:text-gray-300">
+              Δεν έχουν καταχωρηθεί παρουσίες ακόμα
             </p>
           </div>
         )}

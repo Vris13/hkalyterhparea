@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, Trash2, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -24,10 +24,12 @@ export default function PersonPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedPerson, setEditedPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attendanceStats, setAttendanceStats] = useState({ attended: 0, total: 0 });
 
   useEffect(() => {
     if (personId) {
       fetchPerson();
+      fetchAttendanceStats();
     }
   }, [personId]);
 
@@ -45,6 +47,42 @@ export default function PersonPage() {
       setEditedPerson(data);
     }
     setLoading(false);
+  };
+
+  const fetchAttendanceStats = async () => {
+    // Get total past events (events that have already ended)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    const { data: eventsData, error: eventsError } = await supabase
+      .from('events')
+      .select('id, end_date')
+      .lt('end_date', todayStr);
+
+    if (eventsError) {
+      console.error('Error fetching events:', eventsError);
+      return;
+    }
+
+    const totalEvents = eventsData?.length || 0;
+    const pastEventIds = eventsData?.map(e => e.id) || [];
+
+    // Get attendances for this person, only for past events
+    const { data: attendanceData, error: attendanceError } = await supabase
+      .from('event_attendances')
+      .select('event_id')
+      .eq('person_id', personId)
+      .in('event_id', pastEventIds.length > 0 ? pastEventIds : ['']);
+
+    if (attendanceError) {
+      console.error('Error fetching attendances:', attendanceError);
+      return;
+    }
+
+    const attended = attendanceData?.length || 0;
+
+    setAttendanceStats({ attended, total: totalEvents });
   };
 
   const handleSave = async () => {
@@ -205,6 +243,34 @@ export default function PersonPage() {
                     </div>
                   </div>
                 )}
+
+                <div className="flex items-start gap-3">
+                  <UserCheck className="w-5 h-5 text-green-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-warm-600 mb-1">Παρουσίες / Απουσίες</p>
+                    <p className="font-semibold text-warm-800 dark:text-gray-100">
+                      <span className="text-green-600">{attendanceStats.attended}</span>
+                      {' / '}
+                      <span className="text-red-600">{attendanceStats.total - attendanceStats.attended}</span>
+                      <span className="text-gray-600 dark:text-gray-400 text-sm ml-2">
+                        ({attendanceStats.total} events συνολικά)
+                      </span>
+                    </p>
+                    {attendanceStats.total > 0 && (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                          <div
+                            className="bg-green-600 h-2.5 rounded-full"
+                            style={{ width: `${(attendanceStats.attended / attendanceStats.total) * 100}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          {Math.round((attendanceStats.attended / attendanceStats.total) * 100)}% συμμετοχή
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {person.bio && (
                   <div>
