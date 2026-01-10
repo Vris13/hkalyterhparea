@@ -108,6 +108,7 @@ export default function PersonPage() {
           } else {
             setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
             setEditedPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
+            await fetchPerson(); // Refetch to ensure cache is cleared
             router.refresh();
           }
         }

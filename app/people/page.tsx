@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase';
 import { Users, Plus } from 'lucide-react';
 import Link from 'next/link';
 
+export const revalidate = 0;
+
 interface Person {
   id: string;
   name: string;
