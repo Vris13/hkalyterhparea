@@ -70,52 +70,63 @@ export default function PersonPage() {
     }
   };
 
-  const handleUploadPhoto = () => {
-    // @ts-ignore
-    if (typeof window.cloudinary === 'undefined') {
-      alert('Cloudinary widget δεν είναι διαθέσιμο. Βεβαιωθείτε ότι έχετε ρυθμίσει τις μεταβλητές περιβάλλοντος.');
+  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      alert('Cloudinary δεν είναι διαθέσιμο.');
       return;
     }
 
-    // @ts-ignore
-    const widget = window.cloudinary.createUploadWidget(
-      {
-        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-        uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-        sources: ['local', 'camera'],
-        multiple: false,
-        folder: 'memory-book/people',
-        tags: [`person_${personId}`],
-      },
-      async (error: any, result: any) => {
-        if (error) {
-          console.error('Upload error:', error);
-          alert('Σφάλμα κατά το ανέβασμα της φωτογραφίας');
-          return;
-        }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+    formData.append('folder', 'memory-book/people');
+    formData.append('tags', `person_${personId}`);
 
-        if (result.event === 'success') {
-          const photoUrl = result.info.secure_url;
-
-          const { error: profileError } = await supabase
-            .from('people')
-            .update({ profile_photo: photoUrl })
-            .eq('id', personId);
-          
-          if (profileError) {
-            console.error('Error saving photo:', profileError);
-            alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας');
-          } else {
-            setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
-            setEditedPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
-            await fetchPerson(); // Refetch to ensure cache is cleared
-            router.refresh();
-          }
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
         }
+      );
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
       }
-    );
 
-    widget.open();
+      const data = await response.json();
+      const photoUrl = data.secure_url;
+
+      const { error: profileError } = await supabase
+        .from('people')
+        .update({ profile_photo: photoUrl })
+        .eq('id', personId);
+      
+      if (profileError) {
+        console.error('Error saving photo:', profileError);
+        alert('Σφάλμα κατά την αποθήκευση της φωτογραφίας');
+      } else {
+        setPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
+        setEditedPerson(prev => prev ? { ...prev, profile_photo: photoUrl } : null);
+        await fetchPerson();
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Σφάλμα κατά το ανέβασμα');
+    }
+
+    // Reset the input
+    if (e.target) {
+      e.target.value = '';
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -314,13 +325,16 @@ export default function PersonPage() {
             </div>
             {isEditing && (
               <div className="p-4">
-                <button
-                  onClick={handleUploadPhoto}
-                  className="w-full flex items-center justify-center gap-2 bg-peach-100 hover:bg-peach-200 text-peach-800 font-semibold py-3 rounded-lg transition-colors"
-                >
+                <label className="w-full flex items-center justify-center gap-2 bg-peach-100 hover:bg-peach-200 text-peach-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer">
                   <Upload className="w-4 h-4" />
                   Αλλαγή Φωτογραφίας
-                </button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadPhoto}
+                    className="hidden"
+                  />
+                </label>
               </div>
             )}
           </div>
