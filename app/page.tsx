@@ -49,12 +49,13 @@ async function getEvents(): Promise<Event[]> {
 
 function getTodaysBirthdays(people: Person[]): Person[] {
   const today = new Date();
-  const todayMonth = today.getMonth();
+  const todayMonth = today.getMonth() + 1; // Months are 1-indexed in date strings
   const todayDay = today.getDate();
 
   return people.filter(person => {
-    const birthday = new Date(person.birthday);
-    return birthday.getMonth() === todayMonth && birthday.getDate() === todayDay;
+    // Parse the date string directly (YYYY-MM-DD format)
+    const [year, month, day] = person.birthday.split('-').map(Number);
+    return month === todayMonth && day === todayDay;
   });
 }
 
