@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase';
 import { Cake, PartyPopper, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
+export const revalidate = 0;
+
 interface Person {
   id: string;
   name: string;
@@ -199,7 +201,7 @@ export default async function Home() {
       )}
 
       {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && todaysEvents.length === 0 && (
+      {upcomingEvents.length > 0 && (
         <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-blue-300 dark:border-blue-700">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-full">
