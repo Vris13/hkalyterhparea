@@ -201,7 +201,7 @@ export default async function Home() {
       )}
 
       {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
+      {upcomingEvents.filter(event => !todaysEvents.some(te => te.id === event.id)).length > 0 && (
         <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-blue-300 dark:border-blue-700">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-full">
@@ -213,7 +213,10 @@ export default async function Home() {
           </div>
           
           <div className="space-y-4">
-            {upcomingEvents.slice(0, 3).map((event) => (
+            {upcomingEvents
+              .filter(event => !todaysEvents.some(te => te.id === event.id))
+              .slice(0, 3)
+              .map((event) => (
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
