@@ -111,6 +111,18 @@ export default function EventsPage() {
       setEvents(prev => [data, ...prev]);
       setFormData({ title: '', start_date: '', end_date: '', time: '', place: '', details: '' });
       setShowCreateForm(false);
+      
+      // Send push notification for new event
+      fetch('/api/notifications/new-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId: data.id,
+          title: data.title,
+          time: data.time,
+          place: data.place,
+        }),
+      }).catch(err => console.error('Failed to send notification:', err));
     }
   };
 

@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Cake, PartyPopper, Calendar } from 'lucide-react';
 import Link from 'next/link';
+import NotificationToggle from '@/components/NotificationToggle';
 
 export const revalidate = 0;
 
@@ -290,6 +291,9 @@ export default async function Home() {
           </div>
         </div>
       )}
+
+      {/* Notification Toggle */}
+      <NotificationToggle />
     </div>
   );
 }
