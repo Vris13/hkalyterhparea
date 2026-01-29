@@ -12,104 +12,69 @@ export async function GET(request: Request) {
     // Get current time in Greek timezone (Europe/Athens)
     const greekTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Athens' });
     const now = new Date(greekTime);
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
     
     // Get today's date in Greek timezone
     const todayStr = now.toISOString().split('T')[0];
     
-    // Time windows to check (Greek time):
-    // 1. Events happening today (send at 9 AM)
-    // 2. Events with specific time - send 1 hour before
-    
-    const notificationsSent = [];
-
-    // At 9 AM Greek time, send reminders for all events today
-    if (currentHour === 9 && currentMinute < 15) {
-      const { data: todayEvents, error: todayError } = await supabase
-        .from('events')
-        .select('*')
-        .lte('start_date', todayStr)
-        .gte('end_date', todayStr);
-
-      if (!todayError && todayEvents && todayEvents.length > 0) {
-        for (const event of todayEvents) {
-          // Skip if already notified in last 12 hours
-          const { data: subs } = await supabase
-            .from('push_subscriptions')
-            .select('last_notified_at')
-            .eq('is_active', true)
-            .single();
-
-          const lastNotified = subs?.last_notified_at ? new Date(subs.last_notified_at) : null;
-          const hoursSinceNotification = lastNotified ? (now.getTime() - lastNotified.getTime()) / (1000 * 60 * 60) : 999;
-
-          if (hoursSinceNotification < 12) continue;
-
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/notifications/send`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                title: `Σήμερα: ${event.title}`,
-                body: event.time 
-                  ? `${event.time}${event.place ? ` - ${event.place}` : ''}` 
-                  : event.place || 'Μην το ξεχάσεις!',
-                url: `/events/${event.id}`,
-                icon: '/icon-192x192.png',
-              }),
-            }
-          );
-          const result = await response.json();
-          notificationsSent.push({ type: 'today', event: event.title, result });
-        }
-      }
-    }
-
-    // Check for events with specific times happening in 1 hour
-    const { data: events, error } = await supabase
+    // Get all events happening today
+    const { data: todayEvents, error: todayError } = await supabase
       .from('events')
       .select('*')
       .lte('start_date', todayStr)
-      .gte('end_date', todayStr)
-      .not('time', 'is', null);
+      .gte('end_date', todayStr);
 
-    if (!error && events && events.length > 0) {
-      for (const event of events) {
-        // Parse event time (format: "HH:MM" or "HH:MM - HH:MM")
-        const timeMatch = event.time?.match(/^(\d{1,2}):(\d{2})/);
-        if (!timeMatch) continue;
+    if (todayError) {
+      console.error('Error fetching events:', todayError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
 
-        const eventHour = parseInt(timeMatch[1]);
-        const eventMinute = parseInt(timeMatch[2]);
+    if (!todayEvents || todayEvents.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No events today',
+        greekTime: now.toLocaleString('el-GR', { timeZone: 'Europe/Athens' })
+      });
+    }
 
-        // Check if event is in exactly 1 hour (±15 minutes window)
-        const minutesUntilEvent = (eventHour * 60 + eventMinute) - (currentHour * 60 + currentMinute);
-        
-        if (minutesUntilEvent >= 45 && minutesUntilEvent <= 75) {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/notifications/send`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                title: `Σε 1 ώρα: ${event.title}`,
-                body: 'Θα αργήσεις τρέχααα',
-                url: `/events/${event.id}`,
-                icon: '/icon-192x192.png',
-              }),
-            }
-          );
-          const result = await response.json();
-          notificationsSent.push({ type: '1-hour-before', event: event.title, result });
-        }
+    const notificationsSent = [];
+
+    // Send notification for each event
+    for (const event of todayEvents) {
+      // Build notification body based on time
+      let notificationBody = '';
+      let notificationTitle = '';
+      
+      if (event.time) {
+        // Event has specific time
+        notificationTitle = `Σήμερα στις ${event.time}: ${event.title}`;
+        notificationBody = event.place ? `📍 ${event.place}` : 'Μην το ξεχάσεις!';
+      } else {
+        // Event without specific time
+        notificationTitle = `Σήμερα: ${event.title}`;
+        notificationBody = event.place ? `📍 ${event.place}` : 'Μην το ξεχάσεις!';
       }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/notifications/send`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: notificationTitle,
+            body: notificationBody,
+            url: `/events/${event.id}`,
+            icon: '/icon-192x192.png',
+          }),
+        }
+      );
+      const result = await response.json();
+      notificationsSent.push({ event: event.title, time: event.time, result });
     }
 
     return NextResponse.json({ 
       success: true, 
       greekTime: now.toLocaleString('el-GR', { timeZone: 'Europe/Athens' }),
+      eventsProcessed: todayEvents.length,
       notificationsSent
     });
   } catch (error) {
