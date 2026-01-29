@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { supabase } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // Configure web-push with VAPID keys
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY!;
