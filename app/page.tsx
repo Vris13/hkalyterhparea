@@ -76,7 +76,7 @@ function getTodaysEvents(events: Event[]): Event[] {
   });
 }
 
-function getRelevantEvents(events: Event[]): { current: Event[], yesterday: Event[] } {
+function getRelevantEvents(events: Event[]): { current: Event[], today_ended: Event[], yesterday: Event[] } {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   
@@ -84,6 +84,7 @@ function getRelevantEvents(events: Event[]): { current: Event[], yesterday: Even
   yesterday.setDate(yesterday.getDate() - 1);
 
   const current: Event[] = [];
+  const todayEndedEvents: Event[] = [];
   const yesterdayEvents: Event[] = [];
 
   events.forEach(event => {
@@ -96,13 +97,17 @@ function getRelevantEvents(events: Event[]): { current: Event[], yesterday: Even
     if (endDate >= now) {
       current.push(event);
     }
+    // Today's ended events (ended exactly today)
+    else if (endDate.getTime() === now.getTime()) {
+      todayEndedEvents.push(event);
+    }
     // Yesterday's events (ended exactly yesterday)
     else if (endDate.getTime() === yesterday.getTime()) {
       yesterdayEvents.push(event);
     }
   });
 
-  return { current, yesterday: yesterdayEvents };
+  return { current, today_ended: todayEndedEvents, yesterday: yesterdayEvents };
 }
 
 export default async function Home() {
@@ -110,7 +115,7 @@ export default async function Home() {
   const events = await getEvents();
   
   const todaysBirthdays = getTodaysBirthdays(people);
-  const { current: upcomingEvents, yesterday: yesterdayEvents } = getRelevantEvents(events);
+  const { current: upcomingEvents, today_ended: todayEndedEvents, yesterday: yesterdayEvents } = getRelevantEvents(events);
   const todaysEvents = getTodaysEvents(events);
 
   return (
@@ -243,20 +248,20 @@ export default async function Home() {
         </div>
       )}
 
-      {/* Recent Past Events (for photo uploads) */}
-      {yesterdayEvents.length > 0 && (
+      {/* Old Events (Today's Ended + Yesterday's Events) */}
+      {(todayEndedEvents.length > 0 || yesterdayEvents.length > 0) && (
         <div className="bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900 dark:to-pink-900 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-orange-300 dark:border-orange-700">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gradient-to-r from-orange-600 to-pink-600 p-3 rounded-full">
               <PartyPopper className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-              Χθεσινό Event - Πρόσθεσε Φωτογραφίες! 📸
+              Παλιά Events 📸
             </h2>
           </div>
           
           <div className="space-y-4">
-            {yesterdayEvents.map((event) => (
+            {[...todayEndedEvents, ...yesterdayEvents].map((event) => (
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
@@ -278,7 +283,7 @@ export default async function Home() {
       )}
 
       {/* No events today */}
-      {todaysBirthdays.length === 0 && todaysEvents.length === 0 && upcomingEvents.length === 0 && yesterdayEvents.length === 0 && (
+      {todaysBirthdays.length === 0 && todaysEvents.length === 0 && upcomingEvents.length === 0 && todayEndedEvents.length === 0 && yesterdayEvents.length === 0 && (
         <div className="text-center py-16">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md inline-block">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
