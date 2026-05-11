@@ -46,12 +46,15 @@ export default function EventDetailPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [rsvps, setRSVPs] = useState<RSVP[]>([]);
-  const [attendances, setAttendances] = useState<string[]>([]);
+  // attendances: array of { id, person_id?, custom_name? }
+  const [attendances, setAttendances] = useState<any[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
   const [customName, setCustomName] = useState<string>('');
   const [selectedResponse, setSelectedResponse] = useState<'Ναι' | 'Όχι' | 'Μπορεί' | 'Θα αργήσω'>('Ναι');
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [showOtherInput, setShowOtherInput] = useState(false);
+  const [otherName, setOtherName] = useState('');
   const [countsAttendance, setCountsAttendance] = useState<boolean>(true);
   const [editData, setEditData] = useState({
     title: '',
@@ -146,43 +149,83 @@ export default function EventDetailPage() {
   const fetchAttendances = async () => {
     const { data, error } = await supabase
       .from('event_attendances')
-      .select('person_id')
+      .select('id, person_id, custom_name')
       .eq('event_id', eventId);
 
     if (error) {
       console.error('Error fetching attendances:', error);
     } else {
-      setAttendances((data || []).map(a => a.person_id));
+      setAttendances(data || []);
     }
   };
 
   const toggleAttendance = async (personId: string) => {
-    const isAttending = attendances.includes(personId);
+    const existing = attendances.find(a => a.person_id === personId);
 
-    if (isAttending) {
+    if (existing) {
       const { error } = await supabase
         .from('event_attendances')
         .delete()
-        .eq('event_id', eventId)
-        .eq('person_id', personId);
+        .eq('id', existing.id);
 
       if (error) {
         console.error('Error removing attendance:', error);
         alert('Σφάλμα κατά την αφαίρεση');
       } else {
-        setAttendances(prev => prev.filter(id => id !== personId));
+        setAttendances(prev => prev.filter(a => a.id !== existing.id));
       }
     } else {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('event_attendances')
-        .insert({ event_id: eventId, person_id: personId });
+        .insert({ event_id: eventId, person_id: personId })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error adding attendance:', error);
         alert('Σφάλμα κατά την προσθήκη');
       } else {
-        setAttendances(prev => [...prev, personId]);
+        setAttendances(prev => [...prev, data]);
       }
+    }
+  };
+
+  const addOtherAttendance = async () => {
+    const name = otherName.trim();
+    if (!name) return;
+    try {
+      const { data, error } = await supabase
+        .from('event_attendances')
+        .insert({ event_id: eventId, custom_name: name })
+        .select('id, person_id, custom_name')
+        .single();
+
+      if (error) throw error;
+
+      setAttendances(prev => [...prev, data]);
+      setOtherName('');
+      setShowOtherInput(false);
+    } catch (err: any) {
+      console.error('Error adding other attendance:', err);
+      if (err?.code === 'PGRST204' || String(err?.message || '').toLowerCase().includes('custom_name')) {
+        alert('Η στήλη "custom_name" λείπει από τον πίνακα event_attendances. Πρόσθεσέ την με:\n\nalter table public.event_attendances add column if not exists custom_name text;');
+      } else {
+        alert('Σφάλμα κατά την προσθήκη');
+      }
+    }
+  };
+
+  const deleteAttendanceById = async (id: string) => {
+    const { error } = await supabase
+      .from('event_attendances')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting attendance:', error);
+      alert('Σφάλμα κατά τη διαγραφή');
+    } else {
+      setAttendances(prev => prev.filter(a => a.id !== id));
     }
   };
 
@@ -752,20 +795,50 @@ export default function EventDetailPage() {
               </label>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {people.map((person) => (
-                <button
-                  key={person.id}
-                  onClick={() => toggleAttendance(person.id)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    attendances.includes(person.id)
-                      ? 'bg-green-500 text-white shadow-md'
-                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:border-green-400'
-                  }`}
-                >
-                  {attendances.includes(person.id) && '✓ '}
-                  {person.name}
-                </button>
-              ))}
+              {people.map((person) => {
+                const isAtt = attendances.some(a => a.person_id === person.id);
+                return (
+                  <button
+                    key={person.id}
+                    onClick={() => toggleAttendance(person.id)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      isAtt
+                        ? 'bg-green-500 text-white shadow-md'
+                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:border-green-400'
+                    }`}
+                  >
+                    {isAtt && '✓ '}
+                    {person.name}
+                  </button>
+                );
+              })}
+
+              {/* Other button */}
+              <div className="col-span-2 md:col-span-1 lg:col-span-1 flex items-center">
+                {!showOtherInput ? (
+                  <button
+                    onClick={() => setShowOtherInput(true)}
+                    className="px-4 py-2 w-full rounded-lg font-medium border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 bg-white hover:bg-gray-50"
+                  >
+                    ✨ Άλλος
+                  </button>
+                ) : (
+                  <div className="flex w-full gap-2">
+                    <input
+                      value={otherName}
+                      onChange={(e) => setOtherName(e.target.value)}
+                      placeholder="Όνομα..."
+                      className="flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                    <button
+                      onClick={addOtherAttendance}
+                      className="px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg"
+                    >
+                      Προσθήκη
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -775,16 +848,22 @@ export default function EventDetailPage() {
                 ✅ Ήρθαν ({attendances.length})
               </h4>
               <div className="flex flex-wrap gap-2">
-                {people
-                  .filter(p => attendances.includes(p.id))
-                  .map((person) => (
-                    <span
-                      key={person.id}
-                      className="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-gray-800 dark:text-gray-100 font-medium"
-                    >
-                      {person.name}
+                {attendances.map((a) => {
+                  if (a.person_id) {
+                    const person = people.find(p => p.id === a.person_id);
+                    return (
+                      <span key={a.id} className="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-gray-800 dark:text-gray-100 font-medium">
+                        {person?.name || 'Unknown'}
+                      </span>
+                    );
+                  }
+                  return (
+                    <span key={a.id} className="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-gray-800 dark:text-gray-100 font-medium flex items-center gap-2">
+                      {a.custom_name}
+                      <button onClick={() => deleteAttendanceById(a.id)} className="text-red-500 hover:text-red-700 ml-2">✕</button>
                     </span>
-                  ))}
+                  );
+                })}
               </div>
             </div>
           ) : (
