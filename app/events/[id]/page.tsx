@@ -52,6 +52,7 @@ export default function EventDetailPage() {
   const [selectedResponse, setSelectedResponse] = useState<'Ναι' | 'Όχι' | 'Μπορεί' | 'Θα αργήσω'>('Ναι');
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [countsAttendance, setCountsAttendance] = useState<boolean>(true);
   const [editData, setEditData] = useState({
     title: '',
     start_date: '',
@@ -81,6 +82,7 @@ export default function EventDetailPage() {
       router.push('/events');
     } else {
       setEvent(data);
+      setCountsAttendance(data?.counts_attendance !== false);
       setEditData({
         title: data.title,
         start_date: data.start_date,
@@ -289,6 +291,7 @@ export default function EventDetailPage() {
       time: editData.time,
       place: editData.place,
       details: editData.details,
+      counts_attendance: countsAttendance,
     };
 
     const startDate = new Date(eventData.start_date);
@@ -306,7 +309,11 @@ export default function EventDetailPage() {
 
     if (error) {
       console.error('Error updating event:', error);
-      alert('Σφάλμα κατά την ενημέρωση');
+      if (error?.code === 'PGRST204') {
+        alert('Η στήλη "counts_attendance" δεν υπάρχει στη βάση. Εκτέλεσε το SQL:\n\nALTER TABLE events ADD COLUMN counts_attendance boolean DEFAULT true;\n\nή δημιούργησε τη στήλη μέσω του Supabase UI.');
+      } else {
+        alert('Σφάλμα κατά την ενημέρωση');
+      }
     } else {
       setEvent({ ...event, ...eventData });
       setIsEditing(false);
@@ -704,60 +711,129 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
-        <div className="flex items-center gap-3 mb-6">
-          <UserCheck className="w-6 h-6 text-green-600" />
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-            Παρουσίες ({attendances.length})
-          </h2>
-        </div>
-
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-xl p-4 mb-6">
-          <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Επέλεξε όσους ήρθαν</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {people.map((person) => (
-              <button
-                key={person.id}
-                onClick={() => toggleAttendance(person.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  attendances.includes(person.id)
-                    ? 'bg-green-500 text-white shadow-md'
-                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:border-green-400'
-                }`}
-              >
-                {attendances.includes(person.id) && '✓ '}
-                {person.name}
-              </button>
-            ))}
+      {/* Attendance block is shown only when the event "counts" for attendance */}
+      {countsAttendance ? (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
+          <div className="flex items-center gap-3 mb-6">
+            <UserCheck className="w-6 h-6 text-green-600" />
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+              Παρουσίες ({attendances.length})
+            </h2>
           </div>
-        </div>
 
-        {attendances.length > 0 ? (
-          <div className="bg-green-50 dark:bg-green-900 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
-              ✅ Ήρθαν ({attendances.length})
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {people
-                .filter(p => attendances.includes(p.id))
-                .map((person) => (
-                  <span
-                    key={person.id}
-                    className="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-gray-800 dark:text-gray-100 font-medium"
-                  >
-                    {person.name}
-                  </span>
-                ))}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-800 dark:text-gray-100">Επέλεξε όσους ήρθαν</h3>
+              <label className="inline-flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={countsAttendance}
+                  onChange={async (e) => {
+                    const newVal = e.target.checked;
+                    setCountsAttendance(newVal);
+                    try {
+                      const { error } = await supabase
+                        .from('events')
+                        .update({ counts_attendance: newVal })
+                        .eq('id', eventId);
+                      if (error) throw error;
+                    } catch (err: any) {
+                      console.error('Error updating counts_attendance:', err);
+                      if (err?.code === 'PGRST204') {
+                        alert('Η στήλη "counts_attendance" δεν υπάρχει στη βάση. Εκτέλεσε το SQL:\n\nALTER TABLE events ADD COLUMN counts_attendance boolean DEFAULT true;\n\nή δημιούργησε τη στήλη μέσω του Supabase UI.');
+                      } else {
+                        alert('Σφάλμα κατά την αποθήκευση της ρύθμισης');
+                      }
+                    }
+                  }}
+                  className="form-checkbox h-5 w-5 text-purple-600"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Μετράει το Event;</span>
+              </label>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {people.map((person) => (
+                <button
+                  key={person.id}
+                  onClick={() => toggleAttendance(person.id)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    attendances.includes(person.id)
+                      ? 'bg-green-500 text-white shadow-md'
+                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 hover:border-green-400'
+                  }`}
+                >
+                  {attendances.includes(person.id) && '✓ '}
+                  {person.name}
+                </button>
+              ))}
             </div>
           </div>
-        ) : (
-          <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
-            <p className="text-gray-600 dark:text-gray-300">
-              Δεν έχουν καταχωρηθεί παρουσίες ακόμα
-            </p>
+
+          {attendances.length > 0 ? (
+            <div className="bg-green-50 dark:bg-green-900 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                ✅ Ήρθαν ({attendances.length})
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {people
+                  .filter(p => attendances.includes(p.id))
+                  .map((person) => (
+                    <span
+                      key={person.id}
+                      className="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-gray-800 dark:text-gray-100 font-medium"
+                    >
+                      {person.name}
+                    </span>
+                  ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <p className="text-gray-600 dark:text-gray-300">
+                Δεν έχουν καταχωρηθεί παρουσίες ακόμα
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <UserCheck className="w-6 h-6 text-gray-400" />
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Παρουσίες</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="inline-flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={countsAttendance}
+                  onChange={async (e) => {
+                    const newVal = e.target.checked;
+                    setCountsAttendance(newVal);
+                    try {
+                      const { error } = await supabase
+                        .from('events')
+                        .update({ counts_attendance: newVal })
+                        .eq('id', eventId);
+                      if (error) throw error;
+                    } catch (err: any) {
+                      console.error('Error updating counts_attendance:', err);
+                      if (err?.code === 'PGRST204') {
+                        alert('Η στήλη "counts_attendance" δεν υπάρχει στη βάση. Εκτέλεσε το SQL:\n\nALTER TABLE events ADD COLUMN counts_attendance boolean DEFAULT true;\n\nή δημιούργησε τη στήλη μέσω του Supabase UI.');
+                      } else {
+                        alert('Σφάλμα κατά την αποθήκευση της ρύθμισης');
+                      }
+                    }
+                  }}
+                  className="form-checkbox h-5 w-5 text-purple-600"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Μετράει το Event;</span>
+              </label>
+            </div>
           </div>
-        )}
-      </div>
+          <p className="text-gray-600 dark:text-gray-300">Το event δεν μετράει στις παρουσίες</p>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
         <div className="flex items-center justify-between mb-6">

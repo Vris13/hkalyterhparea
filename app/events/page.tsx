@@ -87,6 +87,7 @@ export default function EventsPage() {
     // If end_date is not provided, use start_date
     const eventData = {
       ...formData,
+      counts_attendance: true,
       end_date: formData.end_date || formData.start_date,
     };
 
@@ -282,6 +283,47 @@ export default function EventsPage() {
   const upcomingEvents = events.filter(e => isUpcoming(e.end_date));
   const pastEvents = events.filter(e => !isUpcoming(e.end_date));
 
+  const [avgParticipation, setAvgParticipation] = useState<number | null>(null);
+
+  useEffect(() => {
+    const computeAverage = async () => {
+      try {
+        // Consider past events that are marked to count attendance (or where the column is undefined)
+        const pastToConsider = events.filter(e => !isUpcoming(e.end_date) && ( (e as any).counts_attendance !== false ));
+        const ids = pastToConsider.map(e => e.id);
+        if (ids.length === 0) {
+          setAvgParticipation(0);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('event_attendances')
+          .select('event_id')
+          .in('event_id', ids);
+
+        if (error) {
+          console.error('Error fetching attendances for average:', error);
+          setAvgParticipation(0);
+          return;
+        }
+
+        const counts: Record<string, number> = {};
+        (data || []).forEach((row: any) => {
+          counts[row.event_id] = (counts[row.event_id] || 0) + 1;
+        });
+
+        const sum = ids.reduce((acc, id) => acc + (counts[id] || 0), 0);
+        const avg = ids.length > 0 ? sum / ids.length : 0;
+        setAvgParticipation(Math.round(avg * 10) / 10);
+      } catch (err) {
+        console.error('Error computing average participation:', err);
+        setAvgParticipation(0);
+      }
+    };
+
+    computeAverage();
+  }, [events]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -304,6 +346,14 @@ export default function EventsPage() {
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
               Τα γεγονότα της παρέας μας
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+              <span className="font-semibold">Συνολικά Events:</span>{' '}
+              <span className="font-bold">{pastEvents.length}</span>
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              <span className="font-semibold">Μέση Συμμετοχή:</span>{' '}
+              <span className="font-bold">{avgParticipation !== null ? avgParticipation : '–'}</span>
             </p>
           </div>
         </div>

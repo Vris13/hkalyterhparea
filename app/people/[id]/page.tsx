@@ -55,14 +55,30 @@ export default function PersonPage() {
     today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString().split('T')[0];
 
-    const { data: eventsData, error: eventsError } = await supabase
-      .from('events')
-      .select('id, end_date')
-      .lt('end_date', todayStr);
+    // Only consider past events that are marked to count for attendance (counts_attendance = true or NULL)
+    let eventsData = null;
+    try {
+      const res = await supabase
+        .from('events')
+        .select('id, end_date')
+        .lt('end_date', todayStr)
+        .or('counts_attendance.eq.true,counts_attendance.is.null');
 
-    if (eventsError) {
-      console.error('Error fetching events:', eventsError);
-      return;
+      if (res.error) throw res.error;
+      eventsData = res.data;
+    } catch (err: any) {
+      console.error('Error fetching events with counts_attendance filter (falling back):', err);
+      // Fallback: fetch past events without counts_attendance filter (for DBs without the column)
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, end_date')
+        .lt('end_date', todayStr);
+
+      if (error) {
+        console.error('Error fetching events:', error);
+        return;
+      }
+      eventsData = data;
     }
 
     const totalEvents = eventsData?.length || 0;
