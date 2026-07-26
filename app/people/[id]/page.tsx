@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, Trash2, UserCheck } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, UserCheck, MapPin, Building2, Briefcase, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -11,9 +11,25 @@ interface Person {
   name: string;
   birthday: string;
   phone?: string;
+  city?: string;
+  university?: string;
+  company?: string;
+  job_title?: string;
+  phd_title?: string;
   profile_photo?: string;
   bio?: string;
 }
+
+const hasValue = (value?: string | null) => Boolean(value && value.trim());
+
+const normalizeOptional = (value?: string | null) => value?.trim() || null;
+
+  const describeSupabaseError = (error: { message?: string; details?: string; hint?: string } | null) => {
+    if (!error) return 'Άγνωστο σφάλμα';
+
+    const parts = [error.message, error.details, error.hint].filter(Boolean);
+    return parts.length > 0 ? parts.join(' | ') : 'Άγνωστο σφάλμα';
+  };
 
 export default function PersonPage() {
   const router = useRouter();
@@ -109,14 +125,19 @@ export default function PersonPage() {
       .update({
         name: editedPerson.name,
         birthday: editedPerson.birthday,
-        phone: editedPerson.phone,
-        bio: editedPerson.bio,
+        phone: normalizeOptional(editedPerson.phone),
+        city: normalizeOptional(editedPerson.city),
+        university: normalizeOptional(editedPerson.university),
+        company: normalizeOptional(editedPerson.company),
+        job_title: normalizeOptional(editedPerson.job_title),
+        phd_title: normalizeOptional(editedPerson.phd_title),
+        bio: normalizeOptional(editedPerson.bio),
       })
       .eq('id', personId);
 
     if (error) {
       console.error('Error updating person:', error);
-      alert('Σφάλμα κατά την αποθήκευση');
+      alert(`Σφάλμα κατά την αποθήκευση: ${describeSupabaseError(error)}`);
     } else {
       setPerson(editedPerson);
       setIsEditing(false);
@@ -235,67 +256,133 @@ export default function PersonPage() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md space-y-4">
             {!isEditing ? (
               <>
-                <div className="flex items-start gap-3">
-                  <Cake className="w-5 h-5 text-peach-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-warm-600 mb-1">Γενέθλια</p>
-                    <p className="font-semibold text-warm-800 dark:text-gray-100">
-                      {formatDate(person.birthday)}
-                    </p>
-                  </div>
-                </div>
-
-                {person.phone && (
-                  <div className="flex items-start gap-3">
-                    <Phone className="w-5 h-5 text-peach-500 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-warm-600 mb-1">Τηλέφωνο</p>
-                      <a
-                        href={`tel:${person.phone}`}
-                        className="font-semibold text-warm-800 dark:text-gray-100 hover:text-peach-600"
-                      >
-                        {person.phone}
-                      </a>
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Cake className="w-5 h-5 text-peach-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-warm-600 mb-1">Γενέθλια</p>
+                        <p className="font-semibold text-warm-800 dark:text-gray-100">
+                          {formatDate(person.birthday)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                <div className="flex items-start gap-3">
-                  <UserCheck className="w-5 h-5 text-green-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-warm-600 mb-1">Παρουσίες / Απουσίες</p>
-                    <p className="font-semibold text-warm-800 dark:text-gray-100">
-                      <span className="text-green-600">{attendanceStats.attended}</span>
-                      {' / '}
-                      <span className="text-red-600">{attendanceStats.total - attendanceStats.attended}</span>
-                      <span className="text-gray-600 dark:text-gray-400 text-sm ml-2">
-                        ({attendanceStats.total} events συνολικά)
-                      </span>
-                    </p>
-                    {attendanceStats.total > 0 && (
-                      <div className="mt-2">
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                          <div
-                            className="bg-green-600 h-2.5 rounded-full"
-                            style={{ width: `${(attendanceStats.attended / attendanceStats.total) * 100}%` }}
-                          ></div>
+                    {person.phone && (
+                      <div className="flex items-start gap-3">
+                        <Phone className="w-5 h-5 text-peach-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-warm-600 mb-1">Τηλέφωνο</p>
+                          <a
+                            href={`tel:${person.phone}`}
+                            className="font-semibold text-warm-800 dark:text-gray-100 hover:text-peach-600"
+                          >
+                            {person.phone}
+                          </a>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          {Math.round((attendanceStats.attended / attendanceStats.total) * 100)}% συμμετοχή
+                      </div>
+                    )}
+
+                    <div className="flex items-start gap-3">
+                      <UserCheck className="w-5 h-5 text-green-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-warm-600 mb-1">Παρουσίες / Απουσίες</p>
+                        <p className="font-semibold text-warm-800 dark:text-gray-100">
+                          <span className="text-green-600">{attendanceStats.attended}</span>
+                          {' / '}
+                          <span className="text-red-600">{attendanceStats.total - attendanceStats.attended}</span>
+                          <span className="text-gray-600 dark:text-gray-400 text-sm ml-2">
+                            ({attendanceStats.total} events συνολικά)
+                          </span>
+                        </p>
+                        {attendanceStats.total > 0 && (
+                          <div className="mt-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                              <div
+                                className="bg-green-600 h-2.5 rounded-full"
+                                style={{ width: `${(attendanceStats.attended / attendanceStats.total) * 100}%` }}
+                              ></div>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              {Math.round((attendanceStats.attended / attendanceStats.total) * 100)}% συμμετοχή
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {person.bio && (
+                      <div>
+                        <p className="text-sm text-warm-600 mb-2">Βιογραφικό</p>
+                        <p className="text-warm-800 dark:text-gray-100 whitespace-pre-wrap">
+                          {person.bio}
                         </p>
                       </div>
                     )}
                   </div>
-                </div>
 
-                {person.bio && (
-                  <div>
-                    <p className="text-sm text-warm-600 mb-2">Βιογραφικό</p>
-                    <p className="text-warm-800 dark:text-gray-100 whitespace-pre-wrap">
-                      {person.bio}
-                    </p>
+                  <div className="space-y-4">
+                    {hasValue(person.city) && (
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-5 h-5 text-peach-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-warm-600 mb-1">Πόλη</p>
+                          <p className="font-semibold text-warm-800 dark:text-gray-100">
+                            {person.city}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {hasValue(person.university) && (
+                      <div className="flex items-start gap-3">
+                        <GraduationCap className="w-5 h-5 text-peach-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-warm-600 mb-1">Πανεπιστήμιο</p>
+                          <p className="font-semibold text-warm-800 dark:text-gray-100">
+                            {person.university}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {hasValue(person.company) && (
+                      <div className="flex items-start gap-3">
+                        <Building2 className="w-5 h-5 text-peach-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-warm-600 mb-1">Εταιρεία</p>
+                          <p className="font-semibold text-warm-800 dark:text-gray-100">
+                            {person.company}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {hasValue(person.job_title) && (
+                      <div className="flex items-start gap-3">
+                        <Briefcase className="w-5 h-5 text-peach-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-warm-600 mb-1">Job title</p>
+                          <p className="font-semibold text-warm-800 dark:text-gray-100">
+                            {person.job_title}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {hasValue(person.phd_title) && (
+                      <div className="flex items-start gap-3">
+                        <GraduationCap className="w-5 h-5 text-peach-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-warm-600 mb-1">Τίτλος PhD</p>
+                          <p className="font-semibold text-warm-800 dark:text-gray-100">
+                            {person.phd_title}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 <button
                   onClick={() => setIsEditing(true)}
@@ -307,60 +394,132 @@ export default function PersonPage() {
               </>
             ) : (
               <>
-                <div>
-                  <label className="block text-sm text-warm-600 mb-2">
-                    Όνομα
-                  </label>
-                  <input
-                    type="text"
-                    value={editedPerson?.name || ''}
-                    onChange={(e) =>
-                      setEditedPerson(prev => prev ? { ...prev, name: e.target.value } : null)
-                    }
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
-                  />
-                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Όνομα
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPerson?.name || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, name: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm text-warm-600 mb-2">
-                    Γενέθλια
-                  </label>
-                  <input
-                    type="date"
-                    value={editedPerson?.birthday || ''}
-                    onChange={(e) =>
-                      setEditedPerson(prev => prev ? { ...prev, birthday: e.target.value } : null)
-                    }
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Γενέθλια
+                    </label>
+                    <input
+                      type="date"
+                      value={editedPerson?.birthday || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, birthday: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm text-warm-600 mb-2">
-                    Τηλέφωνο
-                  </label>
-                  <input
-                    type="tel"
-                    value={editedPerson?.phone || ''}
-                    onChange={(e) =>
-                      setEditedPerson(prev => prev ? { ...prev, phone: e.target.value } : null)
-                    }
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Τηλέφωνο
+                    </label>
+                    <input
+                      type="tel"
+                      value={editedPerson?.phone || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, phone: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm text-warm-600 mb-2">
-                    Βιογραφικό
-                  </label>
-                  <textarea
-                    value={editedPerson?.bio || ''}
-                    onChange={(e) =>
-                      setEditedPerson(prev => prev ? { ...prev, bio: e.target.value } : null)
-                    }
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
-                  />
+                  <div>
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Πόλη
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPerson?.city || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, city: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Πανεπιστήμιο
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPerson?.university || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, university: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Εταιρεία
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPerson?.company || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, company: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Job title
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPerson?.job_title || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, job_title: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Τίτλος PhD
+                    </label>
+                    <input
+                      type="text"
+                      value={editedPerson?.phd_title || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, phd_title: e.target.value } : null)
+                      }
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm text-warm-600 mb-2">
+                      Βιογραφικό
+                    </label>
+                    <textarea
+                      value={editedPerson?.bio || ''}
+                      onChange={(e) =>
+                        setEditedPerson(prev => prev ? { ...prev, bio: e.target.value } : null)
+                      }
+                      rows={4}
+                      className="w-full px-4 py-2 rounded-lg border-2 border-warm-200 dark:border-gray-700 focus:border-peach-400 focus:outline-none resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex gap-2">

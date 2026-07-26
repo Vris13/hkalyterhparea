@@ -50,6 +50,11 @@ create table people (
   name text not null,
   birthday date not null,
   phone text,
+  city text,
+  university text,
+  company text,
+  job_title text,
+  phd_title text,
   profile_photo text,
   bio text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -98,6 +103,18 @@ create index events_date_idx on events(date);
 create index photos_person_id_idx on photos(person_id);
 create index photos_event_id_idx on photos(event_id);
 ```
+
+If your `people` table already exists, add the new optional fields with:
+
+```sql
+alter table people add column if not exists city text;
+alter table people add column if not exists university text;
+alter table people add column if not exists company text;
+alter table people add column if not exists job_title text;
+alter table people add column if not exists phd_title text;
+```
+
+The webapp will then save and update these fields automatically through the create and edit forms. Empty values are stored as `null`, so they stay hidden on the profile page until filled in.
 
 ### 3. Set Up Cloudinary
 

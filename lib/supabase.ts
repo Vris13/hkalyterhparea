@@ -11,6 +11,11 @@ export type Person = {
   name: string;
   phone?: string;
   birthday?: string;
+  city?: string | null;
+  university?: string | null;
+  company?: string | null;
+  job_title?: string | null;
+  phd_title?: string | null;
   bio?: string;
   profile_photo?: string;
   created_at: string;
