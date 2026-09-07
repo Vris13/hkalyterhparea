@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
+import { Home, Users, Calendar as CalendarIcon, PartyPopper, BookOpen } from 'lucide-react';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -12,6 +12,7 @@ export default function Navigation() {
     { href: '/people', icon: Users, label: 'Άνθρωποι' },
     { href: '/calendar', icon: CalendarIcon, label: 'Ημερολόγιο' },
     { href: '/events', icon: PartyPopper, label: 'Events' },
+    { href: '/book-club', icon: BookOpen, label: 'Το Φανερό Σχολείο' },
   ];
 
   return (

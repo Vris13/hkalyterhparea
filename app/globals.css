@@ -24,3 +24,40 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.input-book {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  color: #1f2937;
+}
+
+.input-book:focus {
+  outline: none;
+  border-color: #f97316;
+}
+
+.label-book {
+  display: block;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+article section p.text-sm {
+  white-space: pre-wrap !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .input-book {
+    border-color: #4b5563;
+    background: #1f2937;
+    color: #f3f4f6;
+  }
+
+  .label-book {
+    color: #e5e7eb;
+  }
+}

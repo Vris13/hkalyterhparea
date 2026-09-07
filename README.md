@@ -148,6 +148,9 @@ NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_upload_preset_name
 NEXT_PUBLIC_SITE_PASSWORD=kwstasleftas
 ```
 
+For book-club PDFs, create a public Supabase Storage bucket named `book-club-files`.
+The Supabase Storage limit controls the maximum PDF size.
+
 ### 5. Run the Development Server
 
 ```bash
