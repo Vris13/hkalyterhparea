@@ -754,8 +754,8 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      {/* Attendance block is shown only when the event "counts" for attendance */}
-      {countsAttendance ? (
+      {/* Attendance can be recorded for memory even when it does not count toward statistics */}
+      {(
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
           <div className="flex items-center gap-3 mb-6">
             <UserCheck className="w-6 h-6 text-green-600" />
@@ -873,44 +873,6 @@ export default function EventDetailPage() {
               </p>
             </div>
           )}
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 shadow-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <UserCheck className="w-6 h-6 text-gray-400" />
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Παρουσίες</h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="inline-flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={countsAttendance}
-                  onChange={async (e) => {
-                    const newVal = e.target.checked;
-                    setCountsAttendance(newVal);
-                    try {
-                      const { error } = await supabase
-                        .from('events')
-                        .update({ counts_attendance: newVal })
-                        .eq('id', eventId);
-                      if (error) throw error;
-                    } catch (err: any) {
-                      console.error('Error updating counts_attendance:', err);
-                      if (err?.code === 'PGRST204') {
-                        alert('Η στήλη "counts_attendance" δεν υπάρχει στη βάση. Εκτέλεσε το SQL:\n\nALTER TABLE events ADD COLUMN counts_attendance boolean DEFAULT true;\n\nή δημιούργησε τη στήλη μέσω του Supabase UI.');
-                      } else {
-                        alert('Σφάλμα κατά την αποθήκευση της ρύθμισης');
-                      }
-                    }
-                  }}
-                  className="form-checkbox h-5 w-5 text-purple-600"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Μετράει το Event;</span>
-              </label>
-            </div>
-          </div>
-          <p className="text-gray-600 dark:text-gray-300">Το event δεν μετράει στις παρουσίες</p>
         </div>
       )}
 
