@@ -647,7 +647,6 @@ export default function PersonPage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-warm-800">Αναμνήσεις</h2>
-            <p className="text-warm-600">Οι στιγμές στις οποίες συμμετείχε {person.name}.</p>
           </div>
           <Link
             href={`/people/${personId}/memories/new`}
