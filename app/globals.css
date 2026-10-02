@@ -46,6 +46,129 @@ body {
   font-weight: 600;
 }
 
+.memory-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #ea580c;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  transition: background-color 150ms ease;
+}
+
+.memory-action:hover {
+  background: #c2410c;
+}
+
+.memory-editor-card,
+.memory-editor-panel {
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #1f2937;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+
+.memory-editor-label {
+  display: block;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.memory-editor-heading {
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.memory-editor-help {
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.memory-editor-input {
+  width: 100%;
+  border: 2px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #111827;
+  padding: 0.75rem 1rem;
+}
+
+.memory-editor-input:focus {
+  outline: none;
+  border-color: #f97316;
+}
+
+.memory-people-list {
+  max-height: 12rem;
+  overflow-y: auto;
+  border: 2px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+.memory-person-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #1f2937;
+  padding: 0.5rem;
+}
+
+.memory-save-action,
+.memory-cancel-action,
+.memory-edit-action,
+.memory-delete-action,
+.memory-upload-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  padding: 0.625rem 0.875rem;
+  transition: background-color 150ms ease;
+}
+
+.memory-save-action {
+  flex: 1;
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.memory-save-action:hover { background: #c2410c; }
+.memory-save-action:disabled { background: #9ca3af; }
+
+.memory-cancel-action,
+.memory-edit-action {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.memory-cancel-action:hover,
+.memory-edit-action:hover { background: #d1d5db; }
+
+.memory-delete-action {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.memory-delete-action:hover { background: #fecaca; }
+
+.memory-upload-action {
+  background: #ffedd5;
+  color: #9a3412;
+  cursor: pointer;
+}
+
+.memory-upload-action:hover { background: #fed7aa; }
+
 article section p.text-sm {
   white-space: pre-wrap !important;
 }
@@ -60,4 +183,50 @@ article section p.text-sm {
   .label-book {
     color: #e5e7eb;
   }
+
+  .memory-action {
+    background: #fb923c;
+    color: #111827;
+  }
+
+  .memory-action:hover {
+    background: #fdba74;
+  }
+
+  .memory-editor-card,
+  .memory-editor-panel {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+
+  .memory-editor-label,
+  .memory-editor-heading,
+  .memory-person-option {
+    color: #f3f4f6;
+  }
+
+  .memory-editor-help { color: #d1d5db; }
+
+  .memory-editor-input {
+    border-color: #6b7280;
+    background: #111827;
+    color: #f9fafb;
+  }
+
+  .memory-people-list { border-color: #6b7280; }
+
+  .memory-cancel-action,
+  .memory-edit-action {
+    background: #374151;
+    color: #f9fafb;
+  }
+
+  .memory-cancel-action:hover,
+  .memory-edit-action:hover { background: #4b5563; }
+
+  .memory-delete-action { background: #7f1d1d; color: #fee2e2; }
+  .memory-delete-action:hover { background: #991b1b; }
+
+  .memory-upload-action { background: #7c2d12; color: #ffedd5; }
+  .memory-upload-action:hover { background: #9a3412; }
 }

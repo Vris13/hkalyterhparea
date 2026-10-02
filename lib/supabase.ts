@@ -39,3 +39,13 @@ export type Photo = {
   event_id?: string;
   created_at: string;
 };
+
+export type Memory = {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date?: string | null;
+  place?: string | null;
+  notes?: string | null;
+  created_at: string;
+};

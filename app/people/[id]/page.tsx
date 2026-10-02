@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, UserCheck, MapPin, Building2, Briefcase, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, UserCheck, MapPin, Building2, Briefcase, GraduationCap, Plus, Images } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -18,6 +18,16 @@ interface Person {
   phd_title?: string;
   profile_photo?: string;
   bio?: string;
+}
+
+interface Memory {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date?: string | null;
+  place?: string | null;
+  notes?: string | null;
+  cover_url?: string | null;
 }
 
 const hasValue = (value?: string | null) => Boolean(value && value.trim());
@@ -41,11 +51,13 @@ export default function PersonPage() {
   const [editedPerson, setEditedPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
   const [attendanceStats, setAttendanceStats] = useState({ attended: 0, total: 0 });
+  const [memories, setMemories] = useState<Memory[]>([]);
 
   useEffect(() => {
     if (personId) {
       fetchPerson();
       fetchAttendanceStats();
+      fetchMemories();
     }
   }, [personId]);
 
@@ -63,6 +75,55 @@ export default function PersonPage() {
       setEditedPerson(data);
     }
     setLoading(false);
+  };
+
+  const fetchMemories = async () => {
+    const { data: links, error: linksError } = await supabase
+      .from('memory_people')
+      .select('memory_id')
+      .eq('person_id', personId);
+
+    if (linksError) {
+      console.error('Error fetching person memories:', linksError);
+      return;
+    }
+
+    const memoryIds = (links || []).map(link => link.memory_id);
+    if (memoryIds.length === 0) {
+      setMemories([]);
+      return;
+    }
+
+    const { data: memoryData, error: memoryError } = await supabase
+      .from('memories')
+      .select('id, title, start_date, end_date, place, notes')
+      .in('id', memoryIds)
+      .order('start_date', { ascending: false });
+
+    if (memoryError) {
+      console.error('Error fetching memories:', memoryError);
+      return;
+    }
+
+    const { data: photoData, error: photoError } = await supabase
+      .from('memory_photos')
+      .select('memory_id, url, position')
+      .in('memory_id', memoryIds)
+      .order('position', { ascending: true });
+
+    if (photoError) {
+      console.error('Error fetching memory covers:', photoError);
+    }
+
+    const covers = new Map<string, string>();
+    (photoData || []).forEach(photo => {
+      if (!covers.has(photo.memory_id)) covers.set(photo.memory_id, photo.url);
+    });
+
+    setMemories((memoryData || []).map(memory => ({
+      ...memory,
+      cover_url: covers.get(memory.id) || null,
+    })));
   };
 
   const fetchAttendanceStats = async () => {
@@ -581,6 +642,52 @@ export default function PersonPage() {
           </div>
         </div>
       </div>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-warm-800">Αναμνήσεις</h2>
+            <p className="text-warm-600">Οι στιγμές στις οποίες συμμετείχε {person.name}.</p>
+          </div>
+          <Link
+            href={`/people/${personId}/memories/new`}
+            className="memory-action"
+          >
+            <Plus className="w-5 h-5" />
+            Νέα ανάμνηση
+          </Link>
+        </div>
+
+        {memories.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {memories.map(memory => (
+              <Link
+                key={memory.id}
+                href={`/memories/${memory.id}`}
+                className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+              >
+                <div className="aspect-[4/3] bg-gradient-to-br from-peach-100 to-warm-100">
+                  {memory.cover_url ? (
+                    <img src={memory.cover_url} alt={memory.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Images className="w-12 h-12 text-peach-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-warm-800 truncate">{memory.title}</h3>
+                  <p className="text-sm text-warm-600 mt-1">{formatDate(memory.start_date)}{memory.end_date ? ` - ${formatDate(memory.end_date)}` : ''}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white/70 rounded-2xl p-8 text-center text-warm-600">
+            Δεν υπάρχει ακόμα κάποια ανάμνηση για αυτό το άτομο.
+          </div>
+        )}
+      </section>
     </div>
   );
 }
