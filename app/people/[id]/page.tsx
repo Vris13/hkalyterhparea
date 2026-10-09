@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, UserCheck, MapPin, Building2, Briefcase, GraduationCap, Plus, Images } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Phone, Cake, Upload, UserCheck, MapPin, Building2, Briefcase, GraduationCap, Plus, Images, CheckCircle2, XCircle, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -30,6 +30,14 @@ interface Memory {
   cover_url?: string | null;
 }
 
+interface AttendanceEvent {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date?: string | null;
+  place?: string | null;
+}
+
 const hasValue = (value?: string | null) => Boolean(value && value.trim());
 
 const normalizeOptional = (value?: string | null) => value?.trim() || null;
@@ -51,6 +59,10 @@ export default function PersonPage() {
   const [editedPerson, setEditedPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
   const [attendanceStats, setAttendanceStats] = useState({ attended: 0, total: 0 });
+  const [attendanceEvents, setAttendanceEvents] = useState<AttendanceEvent[]>([]);
+  const [attendedEventIds, setAttendedEventIds] = useState<Set<string>>(new Set());
+  const [showAttendanceDetails, setShowAttendanceDetails] = useState(false);
+  const [attendanceDetailsLoading, setAttendanceDetailsLoading] = useState(false);
   const [memories, setMemories] = useState<Memory[]>([]);
 
   useEffect(() => {
@@ -127,6 +139,7 @@ export default function PersonPage() {
   };
 
   const fetchAttendanceStats = async () => {
+    setAttendanceDetailsLoading(true);
     // Get total past events (events that have already ended)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -137,8 +150,9 @@ export default function PersonPage() {
     try {
       const res = await supabase
         .from('events')
-        .select('id, end_date')
+        .select('id, title, start_date, end_date, place')
         .lt('end_date', todayStr)
+        .order('start_date', { ascending: false })
         .or('counts_attendance.eq.true,counts_attendance.is.null');
 
       if (res.error) throw res.error;
@@ -148,11 +162,13 @@ export default function PersonPage() {
       // Fallback: fetch past events without counts_attendance filter (for DBs without the column)
       const { data, error } = await supabase
         .from('events')
-        .select('id, end_date')
-        .lt('end_date', todayStr);
+        .select('id, title, start_date, end_date, place')
+        .lt('end_date', todayStr)
+        .order('start_date', { ascending: false });
 
       if (error) {
         console.error('Error fetching events:', error);
+        setAttendanceDetailsLoading(false);
         return;
       }
       eventsData = data;
@@ -170,12 +186,18 @@ export default function PersonPage() {
 
     if (attendanceError) {
       console.error('Error fetching attendances:', attendanceError);
+      setAttendanceDetailsLoading(false);
       return;
     }
 
-    const attended = attendanceData?.length || 0;
+    const attendedEventIds = new Set((attendanceData || []).map(attendance => attendance.event_id));
+    const attendanceEventsData = (eventsData || []) as AttendanceEvent[];
+    const attended = attendanceEventsData.filter(event => attendedEventIds.has(event.id)).length;
 
     setAttendanceStats({ attended, total: totalEvents });
+    setAttendedEventIds(attendedEventIds);
+    setAttendanceEvents(attendanceEventsData);
+    setAttendanceDetailsLoading(false);
   };
 
   const handleSave = async () => {
@@ -344,9 +366,15 @@ export default function PersonPage() {
                       </div>
                     )}
 
-                    <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowAttendanceDetails(prev => !prev)}
+                      className="flex w-full items-start gap-3 text-left rounded-lg transition-colors hover:bg-warm-50 dark:hover:bg-gray-700/50"
+                      aria-expanded={showAttendanceDetails}
+                      aria-controls="attendance-details"
+                    >
                       <UserCheck className="w-5 h-5 text-green-500 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm text-warm-600 mb-1">Παρουσίες / Απουσίες</p>
                         <p className="font-semibold text-warm-800 dark:text-gray-100">
                           <span className="text-green-600">{attendanceStats.attended}</span>
@@ -370,7 +398,8 @@ export default function PersonPage() {
                           </div>
                         )}
                       </div>
-                    </div>
+                      <ChevronDown className={`w-5 h-5 mt-0.5 text-warm-500 transition-transform ${showAttendanceDetails ? 'rotate-180' : ''}`} />
+                    </button>
 
                     {person.bio && (
                       <div>
@@ -642,6 +671,80 @@ export default function PersonPage() {
           </div>
         </div>
       </div>
+
+      {showAttendanceDetails && (
+        <section id="attendance-details" className="space-y-4" aria-label="Λεπτομέρειες παρουσιών">
+          <div>
+            <h2 className="text-2xl font-bold text-warm-800">Παρουσίες σε events</h2>
+            <p className="text-sm text-warm-600 mt-1">Τα events που έχουν ολοκληρωθεί και υπολογίζονται στα στατιστικά.</p>
+          </div>
+
+          {attendanceDetailsLoading ? (
+            <div className="bg-white/70 rounded-2xl p-8 text-center text-warm-600">
+              Φόρτωση παρουσιών...
+            </div>
+          ) : attendanceEvents.length === 0 ? (
+            <div className="bg-white/70 rounded-2xl p-8 text-center text-warm-600">
+              Δεν υπάρχουν ολοκληρωμένα events για εμφάνιση.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <h3 className="text-lg font-bold text-warm-800 dark:text-gray-100">Παρουσίες</h3>
+                  <span className="text-sm text-warm-500">({attendanceStats.attended})</span>
+                </div>
+                <div className="space-y-2">
+                  {attendanceEvents.filter(event => attendedEventIds.has(event.id)).length > 0 ? (
+                    attendanceEvents.filter(event => attendedEventIds.has(event.id)).map(event => (
+                      <Link
+                        key={event.id}
+                        href={`/events/${event.id}`}
+                        className="block rounded-lg border border-warm-100 dark:border-gray-700 p-3 hover:border-green-300 hover:bg-green-50/50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <p className="font-semibold text-warm-800 dark:text-gray-100">{event.title}</p>
+                        <p className="text-sm text-warm-600 mt-1">
+                          {formatDate(event.start_date)}{event.place ? ` · ${event.place}` : ''}
+                        </p>
+                      </Link>
+                    ))
+                  ) : <p className="text-sm text-warm-600">Δεν υπάρχουν παρουσίες.</p>}
+                </div>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md">
+                <div className="flex items-center gap-2 mb-4">
+                  <XCircle className="w-5 h-5 text-red-600" />
+                  <h3 className="text-lg font-bold text-warm-800 dark:text-gray-100">Απουσίες</h3>
+                  <span className="text-sm text-warm-500">
+                    ({attendanceEvents.length - attendanceStats.attended})
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {attendanceEvents
+                      .filter(event => !attendedEventIds.has(event.id))
+                      .length > 0 ? (
+                    attendanceEvents
+                      .filter(event => !attendedEventIds.has(event.id))
+                      .map(event => (
+                        <Link
+                          key={event.id}
+                          href={`/events/${event.id}`}
+                          className="block rounded-lg border border-warm-100 dark:border-gray-700 p-3 hover:border-red-300 hover:bg-red-50/50 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <p className="font-semibold text-warm-800 dark:text-gray-100">{event.title}</p>
+                          <p className="text-sm text-warm-600 mt-1">
+                            {formatDate(event.start_date)}{event.place ? ` · ${event.place}` : ''}
+                          </p>
+                        </Link>
+                      ))
+                  ) : <p className="text-sm text-warm-600">Δεν υπάρχουν απουσίες.</p>}
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
