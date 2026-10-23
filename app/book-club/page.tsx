@@ -73,6 +73,7 @@ export default function BookClubPage() {
   const [selectedPerson, setSelectedPerson] = useState("");
   const [ratingScore, setRatingScore] = useState("");
   const [ratingComment, setRatingComment] = useState("");
+  const [editingRatingId, setEditingRatingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [visibleReviews, setVisibleReviews] = useState<Record<string, boolean>>(
@@ -338,11 +339,11 @@ export default function BookClubPage() {
   const saveRating = async (bookId: string) => {
     const normalizedScore = ratingScore.trim().replace(",", ".");
     if (
-      !/^(?:\d|10)(?:\.\d)?$/.test(normalizedScore) ||
+      !/^(?:\d|10)(?:\.\d{1,2})?$/.test(normalizedScore) ||
       Number(normalizedScore) > 10
     ) {
       alert(
-        "Ο βαθμός πρέπει να είναι αριθμός από 0 έως 10 με έως ένα δεκαδικό ψηφίο.",
+        "Ο βαθμός πρέπει να είναι αριθμός από 0 έως 10 με έως δύο δεκαδικά ψηφία.",
       );
       return;
     }
@@ -350,9 +351,15 @@ export default function BookClubPage() {
       alert("Επέλεξε άτομο");
       return;
     }
-    const existing = ratings.find(
-      (item) => item.book_id === bookId && item.person_id === selectedPerson,
-    );
+    const existing = editingRatingId
+      ? ratings.find((item) => item.id === editingRatingId)
+      : ratings.find(
+          (item) => item.book_id === bookId && item.person_id === selectedPerson,
+        );
+    if (editingRatingId && (!existing || existing.book_id !== bookId)) {
+      alert("Δεν βρέθηκε η αξιολόγηση προς επεξεργασία.");
+      return;
+    }
     const payload = {
       book_id: bookId,
       person_id: selectedPerson,
@@ -373,6 +380,12 @@ export default function BookClubPage() {
           .single();
     if (result.error) alert("Σφάλμα κατά την αποθήκευση της αξιολόγησης");
     else {
+      if (Number(result.data.score) !== Number(normalizedScore)) {
+        alert(
+          "Η βάση δεδομένων στρογγυλοποίησε τον βαθμό. Εκτέλεσε το SQL migration για το book_club_ratings.score ώστε να επιτρέπονται δύο δεκαδικά ψηφία.",
+        );
+        return;
+      }
       setRatings((prev) =>
         existing
           ? prev.map((item) => (item.id === existing.id ? result.data : item))
@@ -381,7 +394,22 @@ export default function BookClubPage() {
       setSelectedPerson("");
       setRatingScore("");
       setRatingComment("");
+      setEditingRatingId(null);
     }
+  };
+
+  const startEditingRating = (rating: Rating) => {
+    setEditingRatingId(rating.id);
+    setSelectedPerson(rating.person_id);
+    setRatingScore(String(rating.score));
+    setRatingComment(rating.comment || "");
+  };
+
+  const cancelEditingRating = () => {
+    setEditingRatingId(null);
+    setSelectedPerson("");
+    setRatingScore("");
+    setRatingComment("");
   };
 
   const deleteRating = async (ratingId: string) => {
@@ -403,9 +431,7 @@ export default function BookClubPage() {
       .filter((rating) => rating.book_id === bookId)
       .map((rating) => rating.score);
     return scores.length
-      ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(
-          1,
-        )
+      ? (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(2)
       : null;
   };
   const reviewsAreVisible = (bookId: string) => visibleReviews[bookId] === true;
@@ -602,15 +628,24 @@ export default function BookClubPage() {
                           <Star className="w-4 h-4 text-orange-500" />
                           {people.find((person) => person.id === rating.person_id)
                             ?.name || "Άγνωστο"}
-                          : {rating.score}/10
+                          : {Number(rating.score).toFixed(2)}/10
                         </div>
-                        <button
-                          onClick={() => deleteRating(rating.id)}
-                          aria-label="Διαγραφή αξιολόγησης"
-                          className="p-1 hover:bg-red-100 rounded"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => startEditingRating(rating)}
+                            aria-label="Επεξεργασία αξιολόγησης"
+                            className="p-1 hover:bg-orange-100 rounded"
+                          >
+                            <Edit2 className="w-4 h-4 text-orange-600" />
+                          </button>
+                          <button
+                            onClick={() => deleteRating(rating.id)}
+                            aria-label="Διαγραφή αξιολόγησης"
+                            className="p-1 hover:bg-red-100 rounded"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </button>
+                        </div>
                       </div>
                       {rating.comment && (
                         <p className="text-sm text-gray-700 dark:text-gray-200 mt-1 whitespace-pre-wrap">
@@ -656,8 +691,18 @@ export default function BookClubPage() {
               className="mt-2 inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg"
             >
               <Check className="w-4 h-4" />
-              Αποθήκευση αξιολόγησης
+              {editingRatingId ? "Ενημέρωση αξιολόγησης" : "Αποθήκευση αξιολόγησης"}
             </button>
+            {editingRatingId && (
+              <button
+                type="button"
+                onClick={cancelEditingRating}
+                className="mt-2 ml-2 inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+                Ακύρωση
+              </button>
+            )}
           </section>
         </div>
       </details>

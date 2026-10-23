@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase';
 import { Cake, PartyPopper, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import NotificationToggle from '@/components/NotificationToggle';
+import Wrapped from '@/components/Wrapped';
+import { buildWrappedStats, getWrappedYear, isWrappedSeason, type WrappedAttendance, type WrappedEvent, type WrappedPerson, type WrappedPhoto } from '@/lib/wrapped';
 
 export const revalidate = 0;
 
@@ -46,8 +48,30 @@ async function getEvents(): Promise<Event[]> {
     console.error('Error fetching events:', error);
     return [];
   }
-  
+
   return data || [];
+}
+
+async function getWrappedStats() {
+  if (!isWrappedSeason()) return null;
+  const year = getWrappedYear();
+  const [eventsResult, attendancesResult, peopleResult, photosResult] = await Promise.all([
+    supabase.from('events').select('id, title, start_date, end_date, counts_attendance').gte('start_date', `${year}-01-01`).lte('start_date', `${year}-12-31`),
+    supabase.from('event_attendances').select('event_id, person_id, custom_name'),
+    supabase.from('people').select('id, name'),
+    supabase.from('photos').select('event_id'),
+  ]);
+  if (eventsResult.error || attendancesResult.error || peopleResult.error || photosResult.error) {
+    console.error('Error fetching Wrapped data:', eventsResult.error || attendancesResult.error || peopleResult.error || photosResult.error);
+    return null;
+  }
+  return buildWrappedStats(
+    year,
+    (eventsResult.data || []) as WrappedEvent[],
+    (attendancesResult.data || []) as WrappedAttendance[],
+    (peopleResult.data || []) as WrappedPerson[],
+    (photosResult.data || []) as WrappedPhoto[],
+  );
 }
 
 function getTodaysBirthdays(people: Person[]): Person[] {
@@ -113,6 +137,7 @@ function getRelevantEvents(events: Event[]): { current: Event[], today_ended: Ev
 export default async function Home() {
   const people = await getPeople();
   const events = await getEvents();
+  const wrappedStats = await getWrappedStats();
   
   const todaysBirthdays = getTodaysBirthdays(people);
   const { current: upcomingEvents, today_ended: todayEndedEvents, yesterday: yesterdayEvents } = getRelevantEvents(events);
@@ -120,6 +145,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-[70vh] space-y-8">
+      {wrappedStats && <Wrapped stats={wrappedStats} />}
       {/* Today's Birthdays */}
       {todaysBirthdays.length > 0 && (
         <div className="bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900 dark:to-purple-900 rounded-2xl p-6 md:p-8 shadow-lg border-2 border-pink-300 dark:border-pink-700">

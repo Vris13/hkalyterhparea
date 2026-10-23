@@ -35,3 +35,9 @@ create policy "Enable all operations on memory_photos" on memory_photos for all 
 
 create index if not exists memory_people_person_id_idx on memory_people(person_id);
 create index if not exists memory_photos_memory_id_idx on memory_photos(memory_id);
+
+-- Book-club ratings must preserve values such as 8.25.
+-- Run this once in Supabase if the ratings table already exists.
+alter table if exists book_club_ratings
+  alter column score type numeric(4, 2)
+  using score::numeric(4, 2);
